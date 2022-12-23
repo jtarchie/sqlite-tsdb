@@ -1,6 +1,7 @@
 package main_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"os/exec"
 	"strconv"
@@ -36,6 +37,8 @@ func cli(args ...string) *gexec.Session {
 	session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
 
+	Eventually(session.Out).Should(gbytes.Say(`started`))
+
 	return session
 }
 
@@ -57,9 +60,36 @@ var _ = Describe("Starting the database", func() {
 		session := cli("--port", strconv.Itoa(port))
 		defer session.Kill()
 
-		Eventually(session.Out).Should(gbytes.Say(`started`))
 		response, err := client.R().Get(host("/ping"))
 		Expect(err).NotTo(HaveOccurred())
 		Expect(response.StatusCode).To(Equal(200))
+	})
+
+	When("inserting a value", func() {
+		type statsPayload struct {
+				Count struct {
+					Insert int64
+				}
+		}
+
+		It("increases the insert operations", func() {
+			session := cli("--port", strconv.Itoa(port))
+			defer session.Kill()
+
+			response, err := client.R().Put(host("/api/events"))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(response.StatusCode).To(Equal(201))
+
+			response, err = client.R().Get(host("/api/stats"))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(response.StatusCode).To(Equal(200))
+
+			payload := statsPayload{}
+			err = json.NewDecoder(response.Body).Decode(&payload)
+			Expect(err).NotTo(HaveOccurred())
+			defer response.Body.Close()
+
+			Expect(payload.Count.Insert).To(BeEquivalentTo(1))
+		})
 	})
 })
