@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/imroc/req/v3"
 	. "github.com/onsi/ginkgo/v2"
@@ -65,10 +66,10 @@ var _ = Describe("Starting the database", func() {
 		Expect(response.StatusCode).To(Equal(200))
 	})
 
-	When("inserting a value", func() {
+	When("inserting an event", func() {
 		type statsPayload struct {
 				Count struct {
-					Insert int64
+					Insert uint64
 				}
 		}
 
@@ -76,7 +77,17 @@ var _ = Describe("Starting the database", func() {
 			session := cli("--port", strconv.Itoa(port))
 			defer session.Kill()
 
-			response, err := client.R().Put(host("/api/events"))
+			response, err := client.R().
+				SetBodyJsonString(fmt.Sprintf(`{
+					"time": %d,
+					"labels": {
+						"label": "value"
+					},
+					"value": "Hello World"
+				}`,
+					time.Now().UnixNano(),
+				)).
+				Put(host("/api/events"))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(response.StatusCode).To(Equal(201))
 

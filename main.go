@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"sync/atomic"
 
 	"github.com/alecthomas/kong"
 	"github.com/labstack/echo/v4"
@@ -12,6 +13,12 @@ var cli struct {
 	Port int `help:"port for http server" required:""`
 }
 
+var stats struct {
+	Count struct {
+		Insert uint64
+	}
+}
+
 func main() {
 	e := echo.New()
 	e.GET("/ping", func(c echo.Context) error {
@@ -19,11 +26,12 @@ func main() {
 	})
 
 	e.PUT("/api/events", func(c echo.Context) error {
-		return c.String(http.StatusCreated, `{"status":"OK"}`)
+		atomic.AddUint64(&stats.Count.Insert, 1)
+		return c.NoContent(http.StatusCreated)
 	})
 
 	e.GET("/api/stats", func(c echo.Context) error {
-		return c.String(http.StatusOK, `{"count":{"insert":1}}`)
+		return c.JSON(http.StatusOK, stats)
 	})
 
 	_ = kong.Parse(&cli)
