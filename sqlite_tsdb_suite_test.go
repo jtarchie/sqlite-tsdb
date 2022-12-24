@@ -15,7 +15,7 @@ import (
 	"github.com/phayes/freeport"
 )
 
-func TestSqliteTsdb(t *testing.T) {
+func TestSqliteTSDB(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "SqliteTSDB Suite")
 }
