@@ -1,14 +1,13 @@
 package main_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"os/exec"
 	"strconv"
 	"testing"
 	"time"
 
-	"github.com/imroc/req/v3"
+	"github.com/jtarchie/sqlite-tsdb/sdk"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
@@ -22,7 +21,7 @@ func TestSqliteTsdb(t *testing.T) {
 }
 
 var (
-	client *req.Client
+	client *sdk.Client
 	path   string
 	port   int
 )
@@ -43,17 +42,14 @@ func cli(args ...string) *gexec.Session {
 	return session
 }
 
-func host(path string) string {
-	return fmt.Sprintf("http://localhost:%d%s", port, path)
-}
-
 var _ = BeforeEach(func() {
 	var err error
 
 	port, err = freeport.GetFreePort()
 	Expect(err).NotTo(HaveOccurred())
 
-	client = req.C()
+	client, err = sdk.New(fmt.Sprintf("http://localhost:%d", port))
+	Expect(err).NotTo(HaveOccurred())
 })
 
 var _ = Describe("Starting the database", func() {
@@ -61,46 +57,28 @@ var _ = Describe("Starting the database", func() {
 		session := cli("--port", strconv.Itoa(port))
 		defer session.Kill()
 
-		response, err := client.R().Get(host("/ping"))
+		ok, err := client.Ping()
 		Expect(err).NotTo(HaveOccurred())
-		Expect(response.StatusCode).To(Equal(200))
+		Expect(ok).To(BeTrue())
 	})
 
 	When("inserting an event", func() {
-		type statsPayload struct {
-				Count struct {
-					Insert uint64
-				}
-		}
-
 		It("increases the insert operations", func() {
 			session := cli("--port", strconv.Itoa(port))
 			defer session.Kill()
 
-			response, err := client.R().
-				SetBodyJsonString(fmt.Sprintf(`{
-					"time": %d,
-					"labels": {
-						"label": "value"
-					},
-					"value": "Hello World"
-				}`,
-					time.Now().UnixNano(),
-				)).
-				Put(host("/api/events"))
+			err := client.SendEvent(sdk.Event{
+				Time: sdk.Time(time.Now().UnixNano()),
+				Labels: sdk.Labels{
+					"hello": "world",
+				},
+				Value: "This is a test value",
+			})
 			Expect(err).NotTo(HaveOccurred())
-			Expect(response.StatusCode).To(Equal(201))
 
-			response, err = client.R().Get(host("/api/stats"))
+			stats, err := client.Stats()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(response.StatusCode).To(Equal(200))
-
-			payload := statsPayload{}
-			err = json.NewDecoder(response.Body).Decode(&payload)
-			Expect(err).NotTo(HaveOccurred())
-			defer response.Body.Close()
-
-			Expect(payload.Count.Insert).To(BeEquivalentTo(1))
+			Expect(stats.Count.Insert).To(BeEquivalentTo(1))
 		})
 	})
 })
