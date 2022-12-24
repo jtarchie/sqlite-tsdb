@@ -48,7 +48,7 @@ var _ = Describe("Client", func() {
 			}
 		})
 
-		It("errors on HTTP issues", func() {
+		It("errors on network issues", func() {
 			server.Close()
 
 			ok, err := client.Ping()
@@ -67,6 +67,48 @@ var _ = Describe("Client", func() {
 			ok, err := client.Ping()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(ok).To(BeTrue())
+		})
+	})
+
+	When("retrieving stats", func() {
+		It("returns false on non-200", func() {
+			for _, statusCode := range []int{400, 500} {
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("GET", "/api/stats"),
+						ghttp.RespondWith(statusCode, ``),
+					),
+				)
+
+				stats, err := client.Stats()
+				Expect(err).To(HaveOccurred())
+				Expect(stats).To(BeNil())
+			}
+		})
+
+		It("errors on network issues", func() {
+			server.Close()
+
+			stats, err := client.Stats()
+			Expect(err).To(HaveOccurred())
+			Expect(stats).To(BeNil())
+		})
+
+		It("returns stats on 200", func() {
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("GET", "/api/stats"),
+					ghttp.RespondWith(200, `{
+						"count": {
+							"insert": 1
+						}	
+					}`),
+				),
+			)
+
+			stats, err := client.Stats()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(stats.Count.Insert).To(BeEquivalentTo(1))
 		})
 	})
 })
