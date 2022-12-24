@@ -70,6 +70,41 @@ var _ = Describe("Client", func() {
 		})
 	})
 
+	When("submitting an event", func() {
+		It("returns error on non-201", func() {
+			for _, statusCode := range []int{400, 500} {
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("PUT", "/api/events"),
+						ghttp.RespondWith(statusCode, ``),
+					),
+				)
+
+				err := client.SendEvent(sdk.Event{})
+				Expect(err).To(HaveOccurred())
+			}
+		})
+
+		It("errors on network issues", func() {
+			server.Close()
+
+			err := client.SendEvent(sdk.Event{})
+			Expect(err).To(HaveOccurred())
+		})
+
+		It("returns no error on 201", func() {
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("PUT", "/api/events"),
+					ghttp.RespondWith(201, ``),
+				),
+			)
+
+			err := client.SendEvent(sdk.Event{})
+			Expect(err).NotTo(HaveOccurred())
+		})
+	})
+
 	When("retrieving stats", func() {
 		It("returns false on non-200", func() {
 			for _, statusCode := range []int{400, 500} {
