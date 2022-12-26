@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 
 	"github.com/alecthomas/kong"
+	"github.com/jtarchie/sqlite-tsdb/sdk"
 	"github.com/labstack/echo/v4"
 )
 
@@ -13,13 +14,9 @@ var cli struct {
 	Port int `help:"port for http server" required:""`
 }
 
-var stats struct {
-	Count struct {
-		Insert uint64
-	}
-}
-
 func main() {
+	stats := sdk.StatsPayload{}
+	
 	e := echo.New()
 	e.GET("/ping", func(c echo.Context) error {
 		return c.String(http.StatusOK, `{"status":"OK"}`)
