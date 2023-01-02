@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"sync/atomic"
 
 	"github.com/alecthomas/kong"
@@ -11,7 +12,19 @@ import (
 )
 
 var cli struct {
-	Port int `help:"port for http server" required:""`
+	Port      int `help:"port for http server" required:""`
+	FlushSize int `help:"size of queue when to flush to s3"`
+	S3        struct {
+		AccessKeyID     string
+		SecretAccessKey string
+
+		Bucket         string
+		Endpoint       *url.URL
+		ForcePathStyle bool
+		Path           string
+		Region         string
+		SkipVerify     bool
+	} `embed:"" prefix:"s3-" group:"s3"`
 }
 
 func main() {
