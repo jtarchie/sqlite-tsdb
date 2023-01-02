@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -99,6 +100,8 @@ func news3Client(url string) (*s3.Client, error) {
 	}), nil
 }
 
+// All functions below come from: https://docs.aws.amazon.com/code-library/latest/ug/go_2_s3_code_examples.html
+
 func (s *S3Server) HasObject(name string) (int, error) {
 	matcher, err := regexp.Compile(name)
 	if err != nil {
@@ -128,4 +131,23 @@ func (s *S3Server) HasObject(name string) (int, error) {
 	}
 
 	return 0, fmt.Errorf("could not find object(s) named %s", name)
+}
+
+func (s *S3Server) PutObject(
+	name string,
+	contents io.ReadSeeker,
+) error {
+	_, err := s.Client.PutObject(
+		context.TODO(),
+		&s3.PutObjectInput{
+			Bucket: aws.String(s.bucketName),
+			Key:    aws.String(name),
+			Body:   contents,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("couldn't upload reader to %v as %v: %w", s.bucketName, name, err)
+	}
+
+	return nil
 }
