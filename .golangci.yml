@@ -1,0 +1,29 @@
+run:
+  skip-files: []
+linters:
+  disable-all: true
+  enable:
+  - depguard
+  - errcheck
+  - exportloopref
+  - gocritic
+  - gocyclo
+  - gofmt
+  - gomnd
+  - gosec
+  - gosimple
+  - govet
+  - ineffassign
+  - megacheck
+  - misspell
+  - nakedret
+  - nlreturn
+  - prealloc
+  - staticcheck
+  - stylecheck
+  - typecheck
+  - unconvert
+  - unparam
+  - unused
+  - wsl
+  # - wrapcheck

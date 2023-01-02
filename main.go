@@ -16,7 +16,7 @@ var cli struct {
 
 func main() {
 	stats := sdk.StatsPayload{}
-	
+
 	e := echo.New()
 	e.GET("/ping", func(c echo.Context) error {
 		return c.String(http.StatusOK, `{"status":"OK"}`)
@@ -24,6 +24,7 @@ func main() {
 
 	e.PUT("/api/events", func(c echo.Context) error {
 		atomic.AddUint64(&stats.Count.Insert, 1)
+
 		return c.NoContent(http.StatusCreated)
 	})
 

@@ -23,6 +23,7 @@ func (c *Client) Stats() (*StatsPayload, error) {
 	if response.StatusCode == http.StatusOK {
 		payload := &StatsPayload{}
 		err = json.NewDecoder(response.Body).Decode(payload)
+
 		defer response.Body.Close()
 
 		if err != nil {
