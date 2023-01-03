@@ -32,6 +32,10 @@ var _ = Describe("Mocks", func() {
 			count, err := server.HasObject(`test\d.txt`)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(count).To(BeEquivalentTo(2))
+
+			count, err = server.HasObject(`test\d{3}.txt`)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(count).To(BeEquivalentTo(1))
 		})
 	})
 })
