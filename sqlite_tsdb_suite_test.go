@@ -2,7 +2,9 @@ package main_test
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"testing"
 	"time"
@@ -25,6 +27,7 @@ var (
 	bucketName string
 	client     *sdk.Client
 	path       string
+	workPath   string
 	port       int
 	s3Server   *mocks.S3Server
 )
@@ -61,15 +64,24 @@ var _ = BeforeEach(func() {
 
 	s3Server, err = mocks.NewS3Server(bucketName)
 	Expect(err).NotTo(HaveOccurred())
+
+	workPath, err = os.MkdirTemp("", "")
+	Expect(err).NotTo(HaveOccurred())
 })
 
 var _ = AfterEach(func() {
 	s3Server.Close()
+
+	err := os.RemoveAll(workPath)
+	Expect(err).NotTo(HaveOccurred())
 })
 
 var _ = Describe("Starting the database", func() {
 	It("can /ping", func() {
-		session := cli("--port", strconv.Itoa(port))
+		session := cli(
+			"--port", strconv.Itoa(port),
+			"--work-path", workPath,
+		)
 		defer session.Kill()
 
 		ok, err := client.Ping()
@@ -83,6 +95,7 @@ var _ = Describe("Starting the database", func() {
 		BeforeEach(func() {
 			session = cli(
 				"--port", strconv.Itoa(port),
+				"--work-path", workPath,
 				"--flush-size=1",
 				"--s3-access-key-id", "access-key",
 				"--s3-secret-access-key", "secret-key",
@@ -111,6 +124,12 @@ var _ = Describe("Starting the database", func() {
 			stats, err := client.Stats()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(stats.Count.Insert).To(BeEquivalentTo(1))
+		})
+
+		It("has database files", func() {
+			matches, err := filepath.Glob(filepath.Join(workPath, "*.db"))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(matches).To(HaveLen(1))
 		})
 
 		It("exports on to s3", func() {
