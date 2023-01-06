@@ -16,8 +16,6 @@ import (
 	"github.com/jtarchie/sqlite-tsdb/server"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 var cli struct {
@@ -56,7 +54,7 @@ func execute(logger *zap.Logger) error {
 
 	dbPath := filepath.Join(cli.WorkPath, fmt.Sprintf("%d.db", time.Now().UnixNano()))
 
-	db, err := sql.Open("sqlite3", dbPath)
+	db, err := sql.Open(driverName, dbPath)
 	if err != nil {
 		return fmt.Errorf("could not open sqlite db %q: %w", dbPath, err)
 	}
