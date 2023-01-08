@@ -5,7 +5,7 @@ can handle a large volume of data being added to it. It can be used with a
 programming language called SQL to retrieve and manipulate the data, rather than
 using a custom language.
 
-## Letter from the Editor
+## Motivation
 
 Querying is a crucial aspect of working with time-series databases, and various
 query languages have been developed to support this task, such as
@@ -19,13 +19,12 @@ However, as a seasoned engineer, I have often found myself translating SQL
 queries into these other languages, which may not have a one-to-one mapping but
 can help me understand the shape of the data and the queries I want to write.
 
-This documentation, which is driven by "README" development, is motivated by my
-desire to be able to query time-series data more effectively and will be updated
-as changes and discussions take place.
+This documentation, which is driven by
+[`README` development](https://tom.preston-werner.com/2010/08/23/readme-driven-development.html),
+is motivated by my desire to be able to query time-series data more effectively
+and will be updated as changes and discussions take place.
 
-## Vision
-
-### Requirements
+## Requirements
 
 This outlines the envisioned requirements for the application:
 
@@ -43,7 +42,7 @@ This outlines the envisioned requirements for the application:
   on consistency and valid data over speed.
 - Implement a horizontal scalability approach in order to avoid file collisions.
 
-### Sequence Diagram
+## Sequence Diagram
 
 This is the user flow of the application. It is high level, doesn't influence
 the software architecture.
@@ -76,7 +75,39 @@ sequenceDiagram
 
 ## API
 
+These are the API endpoints that can be used for the events. It provides both
+query and writing of events.
 
 ### Write
 
+- PUT `/api/events` submits an event to the writer service. It will perform
+  validations on the submitted JSON payload and return appropriate errors.
+  Returns `200 OK` all other times.
+
+  ```json
+  {
+    "timestamp": 1673205162254,
+    "labels": {
+      "product_name": "Terracotta Coffee Mug",
+      "order_id": "123456"
+    },
+    "value": "Someone really enjoy their order, we should remind them in the future to order more."
+  }
+  ```
+
 ### Query
+
+- GET `/api/events/query` allows a query for to be done across the time-series
+  data store in the cloud file storage. It will attempts to load data from all
+  corresponding files. It has no limits, which means queries can take a long
+  time.
+
+  ```json
+  {
+    "query": "SELECT product_name FROM events WHERE order_id = 111;",
+    "range": {
+      "start": "2022-01-01",
+      "end": "2022-12-31"
+    }
+  }
+  ```
