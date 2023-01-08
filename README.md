@@ -1,6 +1,9 @@
 # sqlite times series databases with s3 cold storage
 
-Not a clever name for now, calling it by it's intention.
+This database is designed to store and manage data over a period of time, and
+can handle a large volume of data being added to it. It can be used with a
+programming language called SQL to retrieve and manipulate the data, rather than
+using a custom language.
 
 ## Letter from the Editor
 
@@ -20,4 +23,33 @@ This documentation, which is driven by "README" development, is motivated by my
 desire to be able to query time-series data more effectively and will be updated
 as changes and discussions take place.
 
-## Problem Statement
+## Vision
+
+### Requirements
+
+This outlines the envisioned requirements for the application:
+
+- Utilize the [`sqlite3`](https://www.sqlite.org/index.html) standard file
+  format, which is established and backwards compatible to 2050.
+- Leverage AWS S3 and other file storage solutions for scalability and long-term
+  data retention.
+- Allow users to download individual files from the cloud storage. The end user
+  only needs `sqlite3` installed, reducing the barrier to entry and increasing
+  accessibility.
+- Provide human readable file names with relevant metadata, such as time series
+  range.
+- Ensure fast writes with no back pressure to event providers.
+- Enable querying of data across time ranges using SQL query, placing importance
+  on consistency and valid data over speed.
+- Implement a horizontal scalability approach in order to avoid file collisions.
+
+### Architecture
+
+```mermaid
+```
+
+## API
+
+### Write
+
+### Query
