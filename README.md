@@ -43,12 +43,39 @@ This outlines the envisioned requirements for the application:
   on consistency and valid data over speed.
 - Implement a horizontal scalability approach in order to avoid file collisions.
 
-### Architecture
+### Sequence Diagram
+
+This is the user flow of the application. It is high level, doesn't influence
+the software architecture.
 
 ```mermaid
+sequenceDiagram
+    participant user as User
+    participant api as API
+    participant writer as Database Writer
+    participant reader as Query
+    participant s3 as Cloud File Storage
+
+    user->>api: Payload of timestamped event
+    api->>user: Return success
+    api->>writer: Identify event
+    loop Check for size limit threshold
+        writer->>s3: Persist database as sqlite file
+    end
+
+    user->>api: SQL Query with time constraints
+    api->>reader: Identify time range
+    par sqlite file 1
+        reader->>s3: query database via HTTP
+    and sqlite file N
+        reader->>s3: query database via HTTP
+    end
+    reader->>api: Return results for each file
+    api->>user: Aggregate results in sqlite3
 ```
 
 ## API
+
 
 ### Write
 
