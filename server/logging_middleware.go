@@ -60,7 +60,7 @@ func ZapLogger(log *zap.Logger) echo.MiddlewareFunc {
 				fields = append(fields, zap.Error(err))
 			}
 
-			log.Info("http request", fields...)
+			log.Info("http_request", fields...)
 
 			return nil
 		}
