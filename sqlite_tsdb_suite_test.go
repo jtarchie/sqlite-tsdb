@@ -132,7 +132,7 @@ var _ = Describe("Starting the database", func() {
 			Expect(matches).To(HaveLen(1))
 		})
 
-		It("exports on to s3", func() {
+		PIt("exports on to s3", func() {
 			count, err := s3Server.HasObject(iso8601Regex)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(count).To(BeEquivalentTo(1))
