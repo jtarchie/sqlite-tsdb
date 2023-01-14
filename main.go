@@ -60,16 +60,20 @@ func execute(logger *zap.Logger) error {
 	}
 
 	_, err = db.Exec(`
-		CREATE TABLE IF NOT EXISTS events (
-			id INTEGER PRIMARY KEY,
-			payload TEXT NOT NULL
+		CREATE TABLE IF NOT EXISTS payloads (
+			id         INTEGER PRIMARY KEY,
+			payload    TEXT NOT NULL,
+			timestamp  INT GENERATED ALWAYS AS (payload->'$.timestamp') VIRTUAL,
+			value      TEXT GENERATED ALWAYS AS (payload->'$.value') VIRTUAL
 		);
+		CREATE INDEX IF NOT EXISTS payloads_timestamp ON payloads(timestamp);
+		CREATE VIRTUAL TABLE events USING fts5(value, content=payloads, content_rowid=id);
 	`)
 	if err != nil {
 		return fmt.Errorf("could not create schema in %q: %w", dbPath, err)
 	}
 
-	insertEvent, err := db.Prepare(`INSERT INTO events (payload) VALUES (?);`)
+	insertEvent, err := db.Prepare(`INSERT INTO payloads (payload) VALUES (?);`)
 	if err != nil {
 		return fmt.Errorf("could not create prepared insert statement: %w", err)
 	}

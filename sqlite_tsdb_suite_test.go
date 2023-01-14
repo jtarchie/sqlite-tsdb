@@ -33,7 +33,10 @@ var (
 )
 
 var _ = SynchronizedBeforeSuite(func() []byte {
-	path, err := gexec.Build("github.com/jtarchie/sqlite-tsdb")
+	path, err := gexec.Build(
+		"github.com/jtarchie/sqlite-tsdb",
+		"--tags", "fts5 json1",
+	)
 	Expect(err).NotTo(HaveOccurred())
 
 	return []byte(path)
