@@ -76,6 +76,7 @@ func execute(logger *zap.Logger) error {
 		contents, err := io.ReadAll(body)
 		if err != nil {
 			logger.Error("could not read from body", zap.Error(err))
+
 			return c.NoContent(http.StatusUnprocessableEntity)
 		}
 		defer body.Close()
@@ -83,6 +84,7 @@ func execute(logger *zap.Logger) error {
 		err = dbService.Insert(contents)
 		if err != nil {
 			logger.Error("could not capture event", zap.Error(err))
+
 			return c.NoContent(http.StatusUnprocessableEntity)
 		}
 
