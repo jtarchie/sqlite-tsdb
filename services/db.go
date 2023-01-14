@@ -11,12 +11,16 @@ type DB struct {
 }
 
 func NewDB(filename string) (*DB, error) {
-	db, err := sql.Open(dbDriverName, filename)
+	db, err := sql.Open(dbDriverName, fmt.Sprintf("%s?_busy_timeout=5000&_journal_mode=WAL&_synchronous=NORMAL", filename))
 	if err != nil {
 		return nil, fmt.Errorf("could not open sqlite db %q: %w", filename, err)
 	}
 
 	_, err = db.Exec(`
+		PRAGMA busy_timeout = 5000;
+		PRAGMA journal_mode=WAL;
+		PRAGMA synchronous = NORMAL;
+		PRAGMA wal_autocheckpoint = 0;
 		CREATE TABLE IF NOT EXISTS payloads (
 			id         INTEGER PRIMARY KEY,
 			payload    TEXT NOT NULL,
