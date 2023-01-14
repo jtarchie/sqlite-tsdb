@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"sync/atomic"
 	"time"
@@ -38,12 +38,14 @@ var cli struct {
 func main() {
 	logger, err := zap.NewProduction()
 	if err != nil {
-		log.Fatalf("could not create logger: %s", err)
+		logger.Fatal("could not create logger", zap.Error(err))
+		os.Exit(1)
 	}
 
 	err = execute(logger)
 	if err != nil {
 		logger.Fatal("could not execute", zap.Error(err))
+		os.Exit(1)
 	}
 }
 
@@ -56,7 +58,7 @@ func execute(logger *zap.Logger) error {
 
 	dbService, err := services.NewDB(dbPath)
 	if err != nil {
-		return fmt.Errorf("could not init db service: %w", err)
+		return fmt.Errorf("could not start db service: %w", err)
 	}
 
 	e := echo.New()
@@ -73,13 +75,15 @@ func execute(logger *zap.Logger) error {
 
 		contents, err := io.ReadAll(body)
 		if err != nil {
-			return fmt.Errorf("could not read from body: %w", err)
+			logger.Error("could not read from body", zap.Error(err))
+			return c.NoContent(http.StatusUnprocessableEntity)
 		}
 		defer body.Close()
 
 		err = dbService.Insert(contents)
 		if err != nil {
-			return fmt.Errorf("could not capture event: %w", err)
+			logger.Error("could not capture event", zap.Error(err))
+			return c.NoContent(http.StatusUnprocessableEntity)
 		}
 
 		return c.NoContent(http.StatusCreated)
