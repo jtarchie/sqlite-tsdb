@@ -5,6 +5,17 @@ can handle a large volume of data being added to it. It can be used with a
 programming language called SQL to retrieve and manipulate the data, rather than
 using a custom language.
 
+## Usage
+
+### Development
+
+Setting up your local development. These instructions are for MacOS.
+
+```bash
+brew bundle
+task
+```
+
 ## Motivation
 
 Querying is a crucial aspect of working with time-series databases, and various
@@ -42,7 +53,7 @@ This outlines the envisioned requirements for the application:
   on consistency and valid data over speed.
 - Implement a horizontal scalability approach in order to avoid file collisions.
 
-## Sequence Diagram
+### Sequence Diagram
 
 This is the user flow of the application. It is high level, doesn't influence
 the software architecture.
@@ -73,12 +84,12 @@ sequenceDiagram
     api->>user: Aggregate results in sqlite3
 ```
 
-## API
+### API
 
 These are the API endpoints that can be used for the events. It provides both
 query and writing of events.
 
-### Write
+#### Write
 
 - PUT `/api/events` submits an event to the writer service. It will perform
   validations on the submitted JSON payload and return appropriate errors.
@@ -95,7 +106,7 @@ query and writing of events.
   }
   ```
 
-### Query
+#### Query
 
 - GET `/api/events/query` allows a query for to be done across the time-series
   data store in the cloud file storage. It will attempts to load data from all

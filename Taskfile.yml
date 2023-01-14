@@ -1,0 +1,17 @@
+version: '3'
+
+tasks:
+  build: go build ./... 
+  format:
+    cmds:
+    - deno fmt README.md
+    - gofmt -w .
+  lint: golangci-lint run --fix
+  test: go test -race ./...
+  default:
+    deps:
+    - task: format
+    - task: lint
+    - task: build
+    - task: test
+  
