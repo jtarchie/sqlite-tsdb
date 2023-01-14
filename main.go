@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"io"
 	"log"
@@ -14,6 +13,7 @@ import (
 	"github.com/alecthomas/kong"
 	"github.com/jtarchie/sqlite-tsdb/sdk"
 	"github.com/jtarchie/sqlite-tsdb/server"
+	"github.com/jtarchie/sqlite-tsdb/services"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 )
@@ -54,30 +54,10 @@ func execute(logger *zap.Logger) error {
 
 	dbPath := filepath.Join(cli.WorkPath, fmt.Sprintf("%d.db", time.Now().UnixNano()))
 
-	db, err := sql.Open(driverName, dbPath)
+	dbService, err := services.NewDB(dbPath)
 	if err != nil {
-		return fmt.Errorf("could not open sqlite db %q: %w", dbPath, err)
+		return fmt.Errorf("could not init db service: %w", err)
 	}
-
-	_, err = db.Exec(`
-		CREATE TABLE IF NOT EXISTS payloads (
-			id         INTEGER PRIMARY KEY,
-			payload    TEXT NOT NULL,
-			timestamp  INT GENERATED ALWAYS AS (payload->'$.timestamp') VIRTUAL,
-			value      TEXT GENERATED ALWAYS AS (payload->'$.value') VIRTUAL
-		);
-		CREATE INDEX IF NOT EXISTS payloads_timestamp ON payloads(timestamp);
-		CREATE VIRTUAL TABLE events USING fts5(value, content=payloads, content_rowid=id);
-	`)
-	if err != nil {
-		return fmt.Errorf("could not create schema in %q: %w", dbPath, err)
-	}
-
-	insertEvent, err := db.Prepare(`INSERT INTO payloads (payload) VALUES (?);`)
-	if err != nil {
-		return fmt.Errorf("could not create prepared insert statement: %w", err)
-	}
-	defer insertEvent.Close()
 
 	e := echo.New()
 	e.Use(server.ZapLogger(logger))
@@ -97,9 +77,9 @@ func execute(logger *zap.Logger) error {
 		}
 		defer body.Close()
 
-		_, err = insertEvent.Exec(contents)
+		err = dbService.Insert(contents)
 		if err != nil {
-			return fmt.Errorf("could not insert event: %w", err)
+			return fmt.Errorf("could not capture event: %w", err)
 		}
 
 		return c.NoContent(http.StatusCreated)

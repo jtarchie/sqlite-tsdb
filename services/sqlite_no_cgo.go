@@ -1,10 +1,10 @@
 //go:build !cgo
 // +build !cgo
 
-package main
+package services
 
 import (
 	_ "modernc.org/sqlite"
 )
 
-const driverName = "sqlite"
+const dbDriverName = "sqlite"
