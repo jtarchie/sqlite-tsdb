@@ -23,7 +23,9 @@ var _ = Describe("Writer", func() {
 		err = writer.Close()
 		Expect(err).NotTo(HaveOccurred())
 
-		info, err := os.Stat(dbFile.Name())
+		Expect(writer.Filename()).To(Equal(dbFile.Name()))
+
+		info, err := os.Stat(writer.Filename())
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(info.Size()).To(BeNumerically(">", 0))
