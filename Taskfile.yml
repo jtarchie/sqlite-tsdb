@@ -7,7 +7,7 @@ tasks:
     - deno fmt README.md
     - gofmt -w .
   lint: golangci-lint run --fix
-  test: go test -race ./...
+  test: go test -cover --tags "json1 fts5" -race ./...
   default:
     deps:
     - task: format

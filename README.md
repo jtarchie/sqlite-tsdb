@@ -115,7 +115,7 @@ query and writing of events.
 
   ```json
   {
-    "query": "SELECT product_name FROM events WHERE order_id = 111;",
+    "query": "SELECT payload->'product_name' FROM events WHERE events('order_id 111')",
     "range": {
       "start": "2022-01-01",
       "end": "2022-12-31"

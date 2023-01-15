@@ -20,6 +20,10 @@ var _ = Describe("Mocks", func() {
 			server, err := mocks.NewS3Server("testing-1")
 			Expect(err).NotTo(HaveOccurred())
 
+			count, err := server.HasObject(`.*.txt`)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(count).To(BeEquivalentTo(0))
+
 			err = server.PutObject("test1.txt", strings.NewReader("testing"))
 			Expect(err).NotTo(HaveOccurred())
 
@@ -29,7 +33,7 @@ var _ = Describe("Mocks", func() {
 			err = server.PutObject("test2.txt", strings.NewReader("testing"))
 			Expect(err).NotTo(HaveOccurred())
 
-			count, err := server.HasObject(`test\d.txt`)
+			count, err = server.HasObject(`test\d.txt`)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(count).To(BeEquivalentTo(2))
 

@@ -11,6 +11,9 @@ import (
 	"time"
 
 	"github.com/alecthomas/kong"
+	"github.com/c2fo/vfs/v6/backend"
+	"github.com/c2fo/vfs/v6/backend/s3"
+	"github.com/c2fo/vfs/v6/vfssimple"
 	"github.com/jtarchie/sqlite-tsdb/sdk"
 	"github.com/jtarchie/sqlite-tsdb/server"
 	"github.com/jtarchie/sqlite-tsdb/services"
@@ -54,11 +57,23 @@ func execute(logger *zap.Logger) error {
 
 	_ = kong.Parse(&cli)
 
+	backend.Register(
+		fmt.Sprintf("s3://%s", cli.S3.Bucket),
+		s3.NewFileSystem().WithOptions(
+			s3.Options{
+				AccessKeyID:     cli.S3.AccessKeyID,
+				SecretAccessKey: cli.S3.SecretAccessKey,
+				Region:          cli.S3.Region,
+				Endpoint:        cli.S3.Endpoint.String(),
+				ForcePathStyle:  cli.S3.ForcePathStyle,
+			},
+		))
+
 	dbPath := filepath.Join(cli.WorkPath, fmt.Sprintf("%d.db", time.Now().UnixNano()))
 
-	dbService, err := services.NewDB(dbPath)
+	writer, err := services.NewWriter(dbPath)
 	if err != nil {
-		return fmt.Errorf("could not start db service: %w", err)
+		return fmt.Errorf("could not create writer: %w", err)
 	}
 
 	e := echo.New()
@@ -69,8 +84,6 @@ func execute(logger *zap.Logger) error {
 	})
 
 	e.PUT("/api/events", func(c echo.Context) error {
-		atomic.AddUint64(&stats.Count.Insert, 1)
-
 		body := c.Request().Body
 
 		contents, err := io.ReadAll(body)
@@ -81,11 +94,80 @@ func execute(logger *zap.Logger) error {
 		}
 		defer body.Close()
 
-		err = dbService.Insert(contents)
+		err = writer.Insert(contents)
 		if err != nil {
 			logger.Error("could not capture event", zap.Error(err))
 
 			return c.NoContent(http.StatusUnprocessableEntity)
+		}
+
+		count := atomic.AddUint64(&stats.Count.Insert, 1)
+
+		// when the writer count reaches flush range
+		if count%uint64(cli.FlushSize) == 0 {
+			previousDBPath := writer.Filename()
+			dbPath := filepath.Join(cli.WorkPath, fmt.Sprintf("%d.db", time.Now().UnixNano()))
+
+			localLocation := fmt.Sprintf("file://%s", previousDBPath)
+			s3Location := fmt.Sprintf("s3://%s/%s", cli.S3.Bucket, filepath.Base(previousDBPath))
+
+			logger.Info(
+				"copying local to s3",
+				zap.String("local", localLocation),
+				zap.String("s3", s3Location),
+			)
+
+			err := writer.Close()
+			if err != nil {
+				logger.Error("could not close writer",
+					zap.Error(err),
+					zap.String("filename", writer.Filename()),
+				)
+			}
+
+			writer, err = services.NewWriter(dbPath)
+			if err != nil {
+				logger.Error("could not create writer",
+					zap.Error(err),
+					zap.String("filename", dbPath),
+				)
+
+				return c.NoContent(http.StatusInternalServerError)
+			}
+
+			s3File, err := vfssimple.NewFile(s3Location)
+			if err != nil {
+				logger.Error(
+					"could not point to s3",
+					zap.Error(err),
+					zap.String("s3", s3Location),
+				)
+
+				return c.NoContent(http.StatusInternalServerError)
+			}
+
+			localFile, err := vfssimple.NewFile(localLocation)
+			if err != nil {
+				logger.Error(
+					"could not point to local",
+					zap.Error(err),
+					zap.String("local", localLocation),
+				)
+
+				return c.NoContent(http.StatusInternalServerError)
+			}
+
+			err = localFile.CopyToFile(s3File)
+			if err != nil {
+				logger.Error(
+					"could not copy local to s3",
+					zap.Error(err),
+					zap.String("s3", s3Location),
+					zap.String("local", localLocation),
+				)
+
+				return c.NoContent(http.StatusInternalServerError)
+			}
 		}
 
 		return c.NoContent(http.StatusCreated)

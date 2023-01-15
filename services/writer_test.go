@@ -13,10 +13,10 @@ var _ = Describe("Writer", func() {
 	It("creates a db file", func() {
 		dbFile, err := os.CreateTemp("", "")
 		Expect(err).NotTo(HaveOccurred())
-		
+
 		err = dbFile.Close()
 		Expect(err).NotTo(HaveOccurred())
-		
+
 		writer, err := services.NewWriter(dbFile.Name())
 		Expect(err).NotTo(HaveOccurred())
 

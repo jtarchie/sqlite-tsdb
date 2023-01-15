@@ -80,35 +80,29 @@ var _ = AfterEach(func() {
 })
 
 var _ = Describe("Starting the database", func() {
-	It("can /ping", func() {
-		session := cli(
+	var session *gexec.Session
+
+	BeforeEach(func() {
+		session = cli(
 			"--port", strconv.Itoa(port),
 			"--work-path", workPath,
+			"--flush-size=1",
+			"--s3-access-key-id", "access-key",
+			"--s3-secret-access-key", "secret-key",
+			"--s3-bucket", bucketName,
+			"--s3-endpoint", s3Server.URL,
+			"--s3-region", "fake-region",
+			"--s3-skip-verify",
+			"--s3-force-path-style",
 		)
-		defer session.Kill()
-
-		ok, err := client.Ping()
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ok).To(BeTrue())
 	})
 
-	When("inserting an event", func() {
-		var session *gexec.Session
+	AfterEach(func() {
+		session.Kill()
+	})
 
-		BeforeEach(func() {
-			session = cli(
-				"--port", strconv.Itoa(port),
-				"--work-path", workPath,
-				"--flush-size=1",
-				"--s3-access-key-id", "access-key",
-				"--s3-secret-access-key", "secret-key",
-				"--s3-bucket", bucketName,
-				"--s3-endpoint", s3Server.URL,
-				"--s3-region", "fake-region",
-				"--s3-skip-verify",
-				"--s3-force-path-style",
-			)
-
+	It("runs successfully", func() {
+		By("sending a single event", func() {
 			err := client.SendEvent(sdk.Event{
 				Time: sdk.Time(time.Now().UnixNano()),
 				Labels: sdk.Labels{
@@ -119,28 +113,28 @@ var _ = Describe("Starting the database", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		AfterEach(func() {
-			session.Kill()
+		By("can /ping", func() {
+			ok, err := client.Ping()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ok).To(BeTrue())
 		})
 
-		It("increases the insert operations", func() {
+		By("increases the insert operations", func() {
 			stats, err := client.Stats()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(stats.Count.Insert).To(BeEquivalentTo(1))
 		})
 
-		It("has database files", func() {
+		By("has database files", func() {
 			matches, err := filepath.Glob(filepath.Join(workPath, "*.db"))
 			Expect(err).NotTo(HaveOccurred())
-			Expect(matches).To(HaveLen(1))
+			Expect(matches).To(HaveLen(2))
 		})
 
-		PIt("exports on to s3", func() {
-			count, err := s3Server.HasObject(iso8601Regex)
+		By("exports on to s3", func() {
+			count, err := s3Server.HasObject(`\d+.db`)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(count).To(BeEquivalentTo(1))
 		})
 	})
 })
-
-const iso8601Regex = `^(?:[1-9]\d{3}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1\d|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[1-9]\d(?:0[48]|[2468][048]|[13579][26])|(?:[2468][048]|[13579][26])00)-02-29)T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:Z|[+-][01]\d:[0-5]\d)$`

@@ -126,11 +126,7 @@ func (s *S3Server) HasObject(name string) (int, error) {
 		}
 	}
 
-	if count > 0 {
-		return count, nil
-	}
-
-	return 0, fmt.Errorf("could not find object(s) named %s", name)
+	return count, nil
 }
 
 func (s *S3Server) PutObject(
