@@ -20,6 +20,11 @@ var _ = Describe("Writer", func() {
 		writer, err := services.NewWriter(dbFile.Name())
 		Expect(err).NotTo(HaveOccurred())
 
+		By("writing a payload", func() {
+			err = writer.Insert([]byte(`{}`))
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		err = writer.Close()
 		Expect(err).NotTo(HaveOccurred())
 
