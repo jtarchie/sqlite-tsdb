@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"path/filepath"
 	"sync/atomic"
-	"time"
 
 	"github.com/c2fo/vfs/v6/backend"
 	"github.com/c2fo/vfs/v6/backend/s3"
@@ -50,11 +49,43 @@ func (cli *CLI) Run(logger *zap.Logger) error {
 			},
 		))
 
-	dbPath := filepath.Join(cli.WorkPath, fmt.Sprintf("%d.db", time.Now().UnixNano()))
+	writer, err := services.NewSwitcher(
+		cli.WorkPath,
+		cli.FlushSize,
+		func(dbPath string) {
+			localLocation := fmt.Sprintf("file://%s", dbPath)
+			s3Location := fmt.Sprintf("s3://%s/%s", cli.S3.Bucket, filepath.Base(dbPath))
 
-	writer, err := services.NewWriter(dbPath)
+			logger = logger.With(
+				zap.String("s3", s3Location),
+				zap.String("local", localLocation),
+			)
+			fmt.Println("======== B1 =======")
+			s3File, err := vfssimple.NewFile(s3Location)
+			if err != nil {
+				logger.Error("could not reference s3", zap.Error(err))
+
+				return
+			}
+			fmt.Println("======== B2 =======")
+			localFile, err := vfssimple.NewFile(localLocation)
+			if err != nil {
+				logger.Error("could not reference local", zap.Error(err))
+
+				return
+			}
+			fmt.Println("======== B3 =======")
+			err = localFile.CopyToFile(s3File)
+			if err != nil {
+				logger.Error("could not copy", zap.Error(err))
+
+				return
+			}
+			fmt.Println("======== B4 =======")
+		},
+	)
 	if err != nil {
-		return fmt.Errorf("could not create writer: %w", err)
+		return fmt.Errorf("could not create switcher: %w", err)
 	}
 
 	e := echo.New()
@@ -76,86 +107,8 @@ func (cli *CLI) Run(logger *zap.Logger) error {
 			return c.NoContent(http.StatusUnprocessableEntity)
 		}
 
-		err = writer.Insert(event)
-		if err != nil {
-			logger.Error("could not capture event", zap.Error(err))
-
-			//nolint: wrapcheck
-			return c.NoContent(http.StatusUnprocessableEntity)
-		}
-
-		count := atomic.AddUint64(&stats.Count.Insert, 1)
-
-		// when the writer count reaches flush range
-		if count%uint64(cli.FlushSize) == 0 {
-			previousDBPath := writer.Filename()
-			dbPath := filepath.Join(cli.WorkPath, fmt.Sprintf("%d.db", time.Now().UnixNano()))
-
-			localLocation := fmt.Sprintf("file://%s", previousDBPath)
-			s3Location := fmt.Sprintf("s3://%s/%s", cli.S3.Bucket, filepath.Base(previousDBPath))
-
-			logger.Info(
-				"copying local to s3",
-				zap.String("local", localLocation),
-				zap.String("s3", s3Location),
-			)
-
-			err := writer.Close()
-			if err != nil {
-				logger.Error("could not close writer",
-					zap.Error(err),
-					zap.String("filename", writer.Filename()),
-				)
-			}
-
-			writer, err = services.NewWriter(dbPath)
-			if err != nil {
-				logger.Error("could not create writer",
-					zap.Error(err),
-					zap.String("filename", dbPath),
-				)
-
-				//nolint: wrapcheck
-				return c.NoContent(http.StatusInternalServerError)
-			}
-
-			s3File, err := vfssimple.NewFile(s3Location)
-			if err != nil {
-				logger.Error(
-					"could not point to s3",
-					zap.Error(err),
-					zap.String("s3", s3Location),
-				)
-
-				//nolint: wrapcheck
-				return c.NoContent(http.StatusInternalServerError)
-			}
-
-			localFile, err := vfssimple.NewFile(localLocation)
-			if err != nil {
-				logger.Error(
-					"could not point to local",
-					zap.Error(err),
-					zap.String("local", localLocation),
-				)
-
-				//nolint: wrapcheck
-				return c.NoContent(http.StatusInternalServerError)
-			}
-
-			err = localFile.CopyToFile(s3File)
-			if err != nil {
-				logger.Error(
-					"could not copy local to s3",
-					zap.Error(err),
-					zap.String("s3", s3Location),
-					zap.String("local", localLocation),
-				)
-
-				//nolint: wrapcheck
-				return c.NoContent(http.StatusInternalServerError)
-			}
-		}
+		writer.Insert(event)
+		atomic.AddUint64(&stats.Count.Insert, 1)
 
 		//nolint: wrapcheck
 		return c.NoContent(http.StatusCreated)

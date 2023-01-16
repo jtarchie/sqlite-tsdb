@@ -118,9 +118,12 @@ var _ = Describe("Running the CLI", func() {
 		})
 
 		By("exports on to s3", func() {
-			count, err := s3Server.HasObject(`\d+.db`)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(count).To(BeEquivalentTo(1))
+			Eventually(func() int {
+				count, err := s3Server.HasObject(`\d+.db`)
+				Expect(err).NotTo(HaveOccurred())
+
+				return count
+			}).Should(BeEquivalentTo(1))
 		})
 	})
 })
