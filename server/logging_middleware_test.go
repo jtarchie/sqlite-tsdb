@@ -34,9 +34,11 @@ var _ = Describe("LoggingMiddleware", func() {
 		router := echo.New()
 		router.Use(server.ZapLogger(logger))
 		router.GET("/", func(c echo.Context) error {
+			//nolint: wrapcheck
 			return c.String(200, "abcd")
 		})
 		router.GET("/empty", func(c echo.Context) error {
+			//nolint: wrapcheck
 			return c.NoContent(200)
 		})
 		router.GET("/error", func(c echo.Context) error {

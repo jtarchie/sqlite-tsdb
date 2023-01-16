@@ -1,11 +1,18 @@
 run:
   skip-files: []
+linters-settings:
+  grouper:
+    import-require-single-import: true
+    import-require-grouping: true
+  unparam:
+    check-exported: true
 linters:
   disable-all: true
   enable:
   - depguard
   - errcheck
   - exportloopref
+  - goconst
   - gocritic
   - gocyclo
   - gofmt
@@ -13,6 +20,7 @@ linters:
   - gosec
   - gosimple
   - govet
+  - grouper
   - ineffassign
   - megacheck
   - misspell
@@ -26,4 +34,4 @@ linters:
   - unparam
   - unused
   - wsl
-  # - wrapcheck
+  - wrapcheck

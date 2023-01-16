@@ -9,7 +9,7 @@ tasks:
   lint: golangci-lint run --fix
   test: go test -cover --tags "json1 fts5" -race ./...
   default:
-    deps:
+    cmds:
     - task: format
     - task: lint
     - task: build

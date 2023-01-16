@@ -62,6 +62,7 @@ func (cli *CLI) Run(logger *zap.Logger) error {
 	e.Use(server.ZapLogger(logger))
 
 	e.GET("/ping", func(c echo.Context) error {
+		//nolint: wrapcheck
 		return c.String(http.StatusOK, `{"status":"OK"}`)
 	})
 
@@ -72,6 +73,7 @@ func (cli *CLI) Run(logger *zap.Logger) error {
 		if err != nil {
 			logger.Error("could not read from body", zap.Error(err))
 
+			//nolint: wrapcheck
 			return c.NoContent(http.StatusUnprocessableEntity)
 		}
 		defer body.Close()
@@ -80,6 +82,7 @@ func (cli *CLI) Run(logger *zap.Logger) error {
 		if err != nil {
 			logger.Error("could not capture event", zap.Error(err))
 
+			//nolint: wrapcheck
 			return c.NoContent(http.StatusUnprocessableEntity)
 		}
 
@@ -114,6 +117,7 @@ func (cli *CLI) Run(logger *zap.Logger) error {
 					zap.String("filename", dbPath),
 				)
 
+				//nolint: wrapcheck
 				return c.NoContent(http.StatusInternalServerError)
 			}
 
@@ -125,6 +129,7 @@ func (cli *CLI) Run(logger *zap.Logger) error {
 					zap.String("s3", s3Location),
 				)
 
+				//nolint: wrapcheck
 				return c.NoContent(http.StatusInternalServerError)
 			}
 
@@ -136,6 +141,7 @@ func (cli *CLI) Run(logger *zap.Logger) error {
 					zap.String("local", localLocation),
 				)
 
+				//nolint: wrapcheck
 				return c.NoContent(http.StatusInternalServerError)
 			}
 
@@ -148,14 +154,17 @@ func (cli *CLI) Run(logger *zap.Logger) error {
 					zap.String("local", localLocation),
 				)
 
+				//nolint: wrapcheck
 				return c.NoContent(http.StatusInternalServerError)
 			}
 		}
 
+		//nolint: wrapcheck
 		return c.NoContent(http.StatusCreated)
 	})
 
 	e.GET("/api/stats", func(c echo.Context) error {
+		//nolint: wrapcheck
 		return c.JSON(http.StatusOK, stats)
 	})
 
