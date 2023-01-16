@@ -23,29 +23,8 @@ func TestSqliteTSDB(t *testing.T) {
 	RunSpecs(t, "SqliteTSDB Suite")
 }
 
-var (
-	bucketName string
-	client     *sdk.Client
-	path       string
-	workPath   string
-	port       int
-	s3Server   *mocks.S3Server
-)
-
-var _ = SynchronizedBeforeSuite(func() []byte {
-	path, err := gexec.Build(
-		"github.com/jtarchie/sqlite-tsdb",
-		"--tags", "fts5 json1",
-	)
-	Expect(err).NotTo(HaveOccurred())
-
-	return []byte(path)
-}, func(data []byte) {
-	path = string(data)
-})
-
 func cli(args ...string) *gexec.Session {
-	command := exec.Command(path, args...)
+	command := exec.Command(args[0], args[1:]...) //nolint: gosec
 	session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
 
@@ -54,36 +33,38 @@ func cli(args ...string) *gexec.Session {
 	return session
 }
 
-var _ = BeforeEach(func() {
-	var err error
-
-	bucketName = fmt.Sprintf("bucket-name-%d", GinkgoParallelProcess())
-
-	port, err = freeport.GetFreePort()
-	Expect(err).NotTo(HaveOccurred())
-
-	client, err = sdk.New(fmt.Sprintf("http://localhost:%d", port))
-	Expect(err).NotTo(HaveOccurred())
-
-	s3Server, err = mocks.NewS3Server(bucketName)
-	Expect(err).NotTo(HaveOccurred())
-
-	workPath, err = os.MkdirTemp("", "")
-	Expect(err).NotTo(HaveOccurred())
-})
-
-var _ = AfterEach(func() {
-	s3Server.Close()
-
-	err := os.RemoveAll(workPath)
-	Expect(err).NotTo(HaveOccurred())
-})
-
-var _ = Describe("Starting the database", func() {
-	var session *gexec.Session
+var _ = Describe("Running the CLI", func() {
+	var (
+		bucketName string
+		client     *sdk.Client
+		port       int
+		s3Server   *mocks.S3Server
+		session    *gexec.Session
+		workPath   string
+	)
 
 	BeforeEach(func() {
-		session = cli(
+		path, err := gexec.Build(
+			"github.com/jtarchie/sqlite-tsdb",
+			"--tags", "fts5 json1",
+		)
+		Expect(err).NotTo(HaveOccurred())
+
+		bucketName = fmt.Sprintf("bucket-name-%d", GinkgoParallelProcess())
+
+		port, err = freeport.GetFreePort()
+		Expect(err).NotTo(HaveOccurred())
+
+		client, err = sdk.New(fmt.Sprintf("http://localhost:%d", port))
+		Expect(err).NotTo(HaveOccurred())
+
+		s3Server, err = mocks.NewS3Server(bucketName)
+		Expect(err).NotTo(HaveOccurred())
+
+		workPath, err = os.MkdirTemp("", "")
+		Expect(err).NotTo(HaveOccurred())
+
+		session = cli(path,
 			"--port", strconv.Itoa(port),
 			"--work-path", workPath,
 			"--flush-size=1",
@@ -99,6 +80,11 @@ var _ = Describe("Starting the database", func() {
 
 	AfterEach(func() {
 		session.Kill()
+
+		s3Server.Close()
+
+		err := os.RemoveAll(workPath)
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("runs successfully", func() {
