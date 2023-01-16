@@ -48,7 +48,8 @@ This outlines the envisioned requirements for the application:
   accessibility.
 - Provide human readable file names with relevant metadata, such as time series
   range.
-- Ensure fast writes with no back pressure to event providers.
+- Ensure fast writes with no back pressure to event providers. Provide metrics
+  and benchmarks for sacrifice of back pressure relief.
 - Enable querying of data across time ranges using SQL query, placing importance
   on consistency and valid data over speed.
 - Have queries load data directly from file storage, rather than requiring local
