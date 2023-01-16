@@ -51,6 +51,8 @@ This outlines the envisioned requirements for the application:
 - Ensure fast writes with no back pressure to event providers.
 - Enable querying of data across time ranges using SQL query, placing importance
   on consistency and valid data over speed.
+- Have queries load data directly from file storage, rather than requiring local
+  copies.
 - Implement a horizontal scalability approach in order to avoid file collisions.
 
 ### Sequence Diagram
