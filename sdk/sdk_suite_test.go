@@ -32,6 +32,11 @@ var _ = Describe("Client", func() {
 		server.Close()
 	})
 
+	It("returns an error with an invalid URL", func() {
+		_, err := sdk.New("/:\n")
+		Expect(err).To(HaveOccurred())
+	})
+
 	When("pinging", func() {
 		It("returns false on non-200", func() {
 			for _, statusCode := range []int{400, 500} {
@@ -127,6 +132,18 @@ var _ = Describe("Client", func() {
 			stats, err := client.Stats()
 			Expect(err).To(HaveOccurred())
 			Expect(stats).To(BeNil())
+		})
+
+		It("errors on invalid JSON", func() {
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("GET", "/api/stats"),
+					ghttp.RespondWith(200, `\* not JSON *\`),
+				),
+			)
+
+			_, err := client.Stats()
+			Expect(err).To(HaveOccurred())
 		})
 
 		It("returns stats on 200", func() {
