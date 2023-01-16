@@ -6,6 +6,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	"github.com/jtarchie/sqlite-tsdb/sdk"
 	"github.com/jtarchie/sqlite-tsdb/services"
 )
 
@@ -21,7 +22,7 @@ var _ = Describe("Writer", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		By("writing a payload", func() {
-			err = writer.Insert([]byte(`{}`))
+			err = writer.Insert(&sdk.Event{})
 			Expect(err).NotTo(HaveOccurred())
 		})
 

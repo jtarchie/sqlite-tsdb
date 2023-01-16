@@ -2,7 +2,10 @@ package services
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
+
+	"github.com/jtarchie/sqlite-tsdb/sdk"
 )
 
 type Writer struct {
@@ -51,8 +54,13 @@ func NewWriter(filename string) (*Writer, error) {
 	}, nil
 }
 
-func (s *Writer) Insert(payload []byte) error {
-	_, err := s.insert.Exec(payload)
+func (s *Writer) Insert(event *sdk.Event) error {
+	bytes, err := json.Marshal(event)
+	if err != nil {
+		return fmt.Errorf("could not marshal event: %w", err)
+	}
+
+	_, err = s.insert.Exec(bytes)
 	if err != nil {
 		return fmt.Errorf("could not insert payload: %w", err)
 	}

@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -67,18 +66,17 @@ func (cli *CLI) Run(logger *zap.Logger) error {
 	})
 
 	e.PUT("/api/events", func(c echo.Context) error {
-		body := c.Request().Body
+		event := &sdk.Event{}
 
-		contents, err := io.ReadAll(body)
+		err := c.Bind(event)
 		if err != nil {
-			logger.Error("could not read from body", zap.Error(err))
+			logger.Error("could not parse event JSON", zap.Error(err))
 
 			//nolint: wrapcheck
 			return c.NoContent(http.StatusUnprocessableEntity)
 		}
-		defer body.Close()
 
-		err = writer.Insert(contents)
+		err = writer.Insert(event)
 		if err != nil {
 			logger.Error("could not capture event", zap.Error(err))
 
