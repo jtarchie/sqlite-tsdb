@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -110,8 +111,11 @@ func (s *S3Server) HasObject(name string) (int, error) {
 
 	count := 0
 
+	contextTimeout, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
 	result, err := s.ListObjectsV2(
-		context.TODO(),
+		contextTimeout,
 		&s3.ListObjectsV2Input{
 			Bucket: aws.String(s.bucketName),
 		},
@@ -133,8 +137,11 @@ func (s *S3Server) PutObject(
 	name string,
 	contents io.ReadSeeker,
 ) error {
+	contextTimeout, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
 	_, err := s.Client.PutObject(
-		context.TODO(),
+		contextTimeout,
 		&s3.PutObjectInput{
 			Bucket: aws.String(s.bucketName),
 			Key:    aws.String(name),
@@ -146,4 +153,8 @@ func (s *S3Server) PutObject(
 	}
 
 	return nil
+}
+
+func (s *S3Server) Close() {
+	s.Server.Close()
 }
