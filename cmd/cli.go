@@ -60,28 +60,27 @@ func (cli *CLI) Run(logger *zap.Logger) error {
 				zap.String("s3", s3Location),
 				zap.String("local", localLocation),
 			)
-			fmt.Println("======== B1 =======")
+
 			s3File, err := vfssimple.NewFile(s3Location)
 			if err != nil {
 				logger.Error("could not reference s3", zap.Error(err))
 
 				return
 			}
-			fmt.Println("======== B2 =======")
+
 			localFile, err := vfssimple.NewFile(localLocation)
 			if err != nil {
 				logger.Error("could not reference local", zap.Error(err))
 
 				return
 			}
-			fmt.Println("======== B3 =======")
+
 			err = localFile.CopyToFile(s3File)
 			if err != nil {
 				logger.Error("could not copy", zap.Error(err))
 
 				return
 			}
-			fmt.Println("======== B4 =======")
 		},
 	)
 	if err != nil {

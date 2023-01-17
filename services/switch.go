@@ -62,11 +62,8 @@ func (s *Switcher) process() {
 			s.writer, _ = newNamedWriter(s.path)
 
 			go func() {
-				fmt.Println("======== A =======")
 				previousWriter.Close()
-				fmt.Println("======== B =======")
 				s.closedWriter(previousWriter.Filename())
-				fmt.Println("======== C =======")
 			}()
 		}
 	}
