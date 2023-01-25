@@ -1,11 +1,10 @@
 package services_test
 
 import (
+	"github.com/jtarchie/sqlite-tsdb/services"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/sourcegraph/conc/iter"
-
-	"github.com/jtarchie/sqlite-tsdb/services"
 )
 
 var _ = Describe("Buffer", func() {

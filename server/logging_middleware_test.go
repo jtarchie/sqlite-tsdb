@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/imroc/req/v3"
+	"github.com/jtarchie/sqlite-tsdb/server"
 	"github.com/labstack/echo/v4"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -11,8 +12,6 @@ import (
 	"github.com/onsi/gomega/ghttp"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-
-	"github.com/jtarchie/sqlite-tsdb/server"
 )
 
 var _ = Describe("LoggingMiddleware", func() {

@@ -11,17 +11,27 @@ import (
 
 type Switcher struct {
 	buffer       *buffer[sdk.Event]
-	closedWriter func(string)
+	closedWriter ClosedWriter
 	count        uint64
 	flushSize    int
 	path         string
 	writer       *Writer
 }
 
+type ClosedWriter interface {
+	Finalize(string)
+}
+
+type ClosedWriterWrap func(string)
+
+func (c ClosedWriterWrap) Finalize(s string) {
+	c(s)
+}
+
 func NewSwitcher(
 	path string,
 	flushSize int,
-	closedWriter func(string),
+	closedWriter ClosedWriter,
 ) (*Switcher, error) {
 	writer, err := newNamedWriter(path)
 	if err != nil {
@@ -63,7 +73,7 @@ func (s *Switcher) process() {
 
 			go func() {
 				previousWriter.Close()
-				s.closedWriter(previousWriter.Filename())
+				s.closedWriter.Finalize(previousWriter.Filename())
 			}()
 		}
 	}

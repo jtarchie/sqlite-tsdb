@@ -3,10 +3,9 @@ package mocks_test
 import (
 	"strings"
 
+	"github.com/jtarchie/sqlite-tsdb/mocks"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
-	"github.com/jtarchie/sqlite-tsdb/mocks"
 )
 
 var _ = Describe("InMemS3", func() {

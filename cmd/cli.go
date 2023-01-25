@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"path/filepath"
 	"sync/atomic"
 
 	"github.com/c2fo/vfs/v6/backend"
 	"github.com/c2fo/vfs/v6/backend/s3"
-	"github.com/c2fo/vfs/v6/vfssimple"
 	"github.com/jtarchie/sqlite-tsdb/sdk"
 	"github.com/jtarchie/sqlite-tsdb/server"
 	"github.com/jtarchie/sqlite-tsdb/services"
@@ -37,51 +35,15 @@ type CLI struct {
 func (cli *CLI) Run(logger *zap.Logger) error {
 	stats := sdk.StatsPayload{}
 
-	backend.Register(
-		fmt.Sprintf("s3://%s", cli.S3.Bucket),
-		s3.NewFileSystem().WithOptions(
-			s3.Options{
-				AccessKeyID:     cli.S3.AccessKeyID,
-				SecretAccessKey: cli.S3.SecretAccessKey,
-				Region:          cli.S3.Region,
-				Endpoint:        cli.S3.Endpoint.String(),
-				ForcePathStyle:  cli.S3.ForcePathStyle,
-			},
-		))
+	cli.registerBucketAuth()
 
 	writer, err := services.NewSwitcher(
 		cli.WorkPath,
 		cli.FlushSize,
-		func(dbPath string) {
-			localLocation := fmt.Sprintf("file://%s", dbPath)
-			s3Location := fmt.Sprintf("s3://%s/%s", cli.S3.Bucket, filepath.Base(dbPath))
-
-			logger = logger.With(
-				zap.String("s3", s3Location),
-				zap.String("local", localLocation),
-			)
-
-			s3File, err := vfssimple.NewFile(s3Location)
-			if err != nil {
-				logger.Error("could not reference s3", zap.Error(err))
-
-				return
-			}
-
-			localFile, err := vfssimple.NewFile(localLocation)
-			if err != nil {
-				logger.Error("could not reference local", zap.Error(err))
-
-				return
-			}
-
-			err = localFile.CopyToFile(s3File)
-			if err != nil {
-				logger.Error("could not copy", zap.Error(err))
-
-				return
-			}
-		},
+		services.NewPersistence(
+			fmt.Sprintf("s3://%s", cli.S3.Bucket),
+			logger,
+		),
 	)
 	if err != nil {
 		return fmt.Errorf("could not create switcher: %w", err)
@@ -121,4 +83,19 @@ func (cli *CLI) Run(logger *zap.Logger) error {
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", cli.Port)))
 
 	return nil
+}
+
+func (cli *CLI) registerBucketAuth() {
+	backend.Register(
+		fmt.Sprintf("s3://%s", cli.S3.Bucket),
+		s3.NewFileSystem().WithOptions(
+			s3.Options{
+				AccessKeyID:     cli.S3.AccessKeyID,
+				SecretAccessKey: cli.S3.SecretAccessKey,
+				Region:          cli.S3.Region,
+				Endpoint:        cli.S3.Endpoint.String(),
+				ForcePathStyle:  cli.S3.ForcePathStyle,
+			},
+		),
+	)
 }

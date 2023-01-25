@@ -3,11 +3,10 @@ package services_test
 import (
 	"os"
 
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
-
 	"github.com/jtarchie/sqlite-tsdb/sdk"
 	"github.com/jtarchie/sqlite-tsdb/services"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Writer", func() {
