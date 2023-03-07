@@ -1,12 +1,12 @@
-package services
+package buffer
 
-type buffer[T any] struct {
+type Buffer[T any] struct {
 	input  chan T
 	output chan T
 }
 
-func NewBuffer[T any](size int) *buffer[T] {
-	b := &buffer[T]{
+func New[T any](size int) *Buffer[T] {
+	b := &Buffer[T]{
 		input:  make(chan T),
 		output: make(chan T, size),
 	}
@@ -15,7 +15,7 @@ func NewBuffer[T any](size int) *buffer[T] {
 	return b
 }
 
-func (b *buffer[T]) run() {
+func (b *Buffer[T]) run() {
 	for v := range b.input {
 	retry:
 		select {
@@ -30,14 +30,14 @@ func (b *buffer[T]) run() {
 	close(b.output)
 }
 
-func (b *buffer[T]) Write(value T) {
+func (b *Buffer[T]) Write(value T) {
 	b.input <- value
 }
 
-func (b *buffer[T]) Read() T {
+func (b *Buffer[T]) Read() T {
 	return <-b.output
 }
 
-func (b *buffer[T]) Close() {
+func (b *Buffer[T]) Close() {
 	close(b.input)
 }

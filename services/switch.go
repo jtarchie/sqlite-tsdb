@@ -6,11 +6,12 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/jtarchie/sqlite-tsdb/buffer"
 	"github.com/jtarchie/sqlite-tsdb/sdk"
 )
 
 type Switcher struct {
-	buffer       *buffer[sdk.Event]
+	buffer       *buffer.Buffer[sdk.Event]
 	closedWriter ClosedWriter
 	count        uint64
 	flushSize    int
@@ -40,7 +41,7 @@ func NewSwitcher(
 	}
 
 	switcher := &Switcher{
-		buffer:       NewBuffer[sdk.Event](bufferSize),
+		buffer:       buffer.New[sdk.Event](bufferSize),
 		closedWriter: closedWriter,
 		count:        0,
 		flushSize:    flushSize,

@@ -1,7 +1,7 @@
-package services_test
+package buffer_test
 
 import (
-	"github.com/jtarchie/sqlite-tsdb/services"
+	"github.com/jtarchie/sqlite-tsdb/buffer"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/sourcegraph/conc/iter"
@@ -10,7 +10,7 @@ import (
 var _ = Describe("Buffer", func() {
 	It("can handle multiple readers and writers", func() {
 		done := make(chan interface{})
-		buffer := services.NewBuffer[int](5)
+		buffer := buffer.New[int](5)
 
 		go iter.ForEach([]int{1, 2, 3, 4, 5}, func(t *int) { buffer.Write(*t) })
 		go func() {
@@ -28,7 +28,7 @@ var _ = Describe("Buffer", func() {
 
 	It("favors more recent writes", func() {
 		done := make(chan interface{})
-		buffer := services.NewBuffer[int](5)
+		buffer := buffer.New[int](5)
 
 		for i := 1; i <= 100; i++ {
 			buffer.Write(i)
