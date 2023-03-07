@@ -2,6 +2,7 @@ package worker_test
 
 import (
 	"context"
+	"fmt"
 	"sync/atomic"
 	"testing"
 
@@ -33,6 +34,33 @@ var _ = Describe("Worker", func() {
 		Eventually(func() int32 {
 			return atomic.LoadInt32(&count)
 		}).Should(BeEquivalentTo(1))
+	})
+
+	When("a panic happens on a worker", func() {
+		It("does not bring anything down", func() {
+			count := int32(0)
+			w := worker.New[int](10, 1, func(index, value int) {
+				defer func() {
+					if r := recover(); r != nil {
+						fmt.Println("Recovered in f", r)
+					}
+				}()
+
+				atomic.AddInt32(&count, 1)
+
+				if value == 100 {
+					panic("a problem has entered the chat")
+				}
+			})
+			defer w.Close()
+
+			w.Enqueue(100)
+			w.Enqueue(101)
+
+			Eventually(func() int32 {
+				return atomic.LoadInt32(&count)
+			}).Should(BeEquivalentTo(2))
+		})
 	})
 
 	It("can process work across workers", func() {
