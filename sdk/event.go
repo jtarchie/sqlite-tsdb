@@ -10,9 +10,9 @@ type Time uint64
 type Value string
 
 type Event struct {
-	Labels Labels
-	Time   Time
-	Value  Value
+	Labels Labels `json:"labels"`
+	Time   Time   `json:"time"`
+	Value  Value  `json:"value"`
 }
 
 func (c *Client) SendEvent(event Event) error {

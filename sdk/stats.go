@@ -8,8 +8,8 @@ import (
 
 type StatsPayload struct {
 	Count struct {
-		Insert uint64
-	}
+		Insert uint64 `json:"insert"`
+	} `json:"count"`
 }
 
 func (c *Client) Stats() (*StatsPayload, error) {
