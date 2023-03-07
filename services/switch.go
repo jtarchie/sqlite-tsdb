@@ -31,6 +31,7 @@ func (c ClosedWriterWrap) Finalize(s string) {
 func NewSwitcher(
 	path string,
 	flushSize int,
+	bufferSize int,
 	closedWriter ClosedWriter,
 ) (*Switcher, error) {
 	writer, err := newNamedWriter(path)
@@ -39,7 +40,7 @@ func NewSwitcher(
 	}
 
 	switcher := &Switcher{
-		buffer:       NewBuffer[sdk.Event](flushSize),
+		buffer:       NewBuffer[sdk.Event](bufferSize),
 		closedWriter: closedWriter,
 		count:        0,
 		flushSize:    flushSize,

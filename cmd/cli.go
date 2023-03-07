@@ -16,10 +16,11 @@ import (
 )
 
 type CLI struct {
-	Port      int    `help:"port for http server" required:""`
-	FlushSize int    `help:"size of queue when to flush to s3"`
-	WorkPath  string `type:"existingdir" help:"store database in directory" required:""`
-	S3        struct {
+	Port       int    `help:"port for http server" required:""`
+	FlushSize  int    `help:"numbers of items to flush to large file store"`
+	BufferSize int    `help:"size of in-memory buffer" default:"100"`
+	WorkPath   string `type:"existingdir" help:"store database in directory" required:""`
+	S3         struct {
 		AccessKeyID     string
 		SecretAccessKey string
 
@@ -40,6 +41,7 @@ func (cli *CLI) Run(logger *zap.Logger) error {
 	writer, err := services.NewSwitcher(
 		cli.WorkPath,
 		cli.FlushSize,
+		cli.BufferSize,
 		services.NewPersistence(
 			fmt.Sprintf("s3://%s", cli.S3.Bucket),
 			logger,

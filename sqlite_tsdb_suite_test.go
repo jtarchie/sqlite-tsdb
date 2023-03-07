@@ -9,12 +9,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bxcodec/faker/v3"
 	"github.com/jtarchie/sqlite-tsdb/mocks"
 	"github.com/jtarchie/sqlite-tsdb/sdk"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
+	"github.com/onsi/gomega/gmeasure"
 	"github.com/phayes/freeport"
 )
 
@@ -124,6 +126,37 @@ var _ = Describe("Running the CLI", func() {
 
 				return count
 			}).Should(BeEquivalentTo(1))
+		})
+	})
+
+	It("handles load", Serial, Label("measurement"), func() {
+		experiment := gmeasure.NewExperiment("Message Inserts")
+		AddReportEntry(experiment.Name, experiment)
+
+		// we sample a function repeatedly to get a statistically significant set of measurements
+		experiment.Sample(func(idx int) {
+			message := faker.Sentence()
+
+			// measure how long it takes to RecomputePages() and store the duration in a "repagination" measurement
+			experiment.MeasureDuration("send event", func() {
+				_ = client.SendEvent(sdk.Event{
+					Time: sdk.Time(time.Now().UnixNano()),
+					Labels: sdk.Labels{
+						"user_id":    "1234",
+						"channel_id": "4567",
+					},
+					Value: sdk.Value(message),
+				})
+			})
+		}, gmeasure.SamplingConfig{N: 100, Duration: 10 * time.Second}) // we'll sample the function up to 20 times or up to a minute, whichever comes first.
+
+		By("exports on to s3", func() {
+			Eventually(func() int {
+				count, err := s3Server.HasObject(`\d+.db`)
+				Expect(err).NotTo(HaveOccurred())
+
+				return count
+			}).Should(BeEquivalentTo(100))
 		})
 	})
 })
