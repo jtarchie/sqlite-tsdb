@@ -1,6 +1,7 @@
 package worker_test
 
 import (
+	"context"
 	"sync/atomic"
 	"testing"
 
@@ -35,21 +36,43 @@ var _ = Describe("Worker", func() {
 	})
 
 	It("can process work across workers", func() {
-		count := int32(0)
-		w := worker.New[int](1, 100, func(index, value int) {
-			defer GinkgoRecover()
+		count, workers := int32(0), make(chan int, 10)
+		ctx, cancel := context.WithCancel(context.Background())
 
-			Expect(value).To(Equal(100))
+		w := worker.New[int](1, 10, func(index, value int) {
+			// keep track of how many workers have been used
+			workers <- index
 
+			// count how many times this function is called
 			atomic.AddInt32(&count, 1)
+
+			// block so other, this worker does not pick up more work
+			for range ctx.Done() {
+			}
 		})
 		defer w.Close()
+		defer cancel()
 
-		w.Enqueue(100)
+		go func() {
+			for i := 0; i < 10; i++ {
+				w.Enqueue(i)
+			}
+		}()
 
 		Eventually(func() int32 {
 			return atomic.LoadInt32(&count)
-		}).Should(BeEquivalentTo(1))
+		}).Should(BeEquivalentTo(10))
+
+		cancel()
+		close(workers)
+
+		usedWorkers := []int{}
+		for id := range workers {
+			usedWorkers = append(usedWorkers, id)
+		}
+
+		Expect(usedWorkers).To(HaveLen(10))
+		Expect(usedWorkers).To(ContainElements(1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
 	})
 
 	DescribeTable("handling a lot of work", func(queueSize, workerSize, elements int) {
@@ -71,9 +94,9 @@ var _ = Describe("Worker", func() {
 	},
 		Entry("1,1,100", 1, 1, 100),
 		Entry("1,1,1000", 1, 1, 100),
-		Entry("10,1,1000", 10, 1, 1000),
-		Entry("1,10,1000", 10, 1, 1000),
-		Entry("10,10,1000", 10, 10, 1000),
+		Entry("10,1,1000", 10, 1, 1_000),
+		Entry("1,10,1000", 10, 1, 1_000),
+		Entry("10,10,1000", 10, 10, 1_000),
 		Entry("10,10,1000", 10, 10, 100_000),
 	)
 })
