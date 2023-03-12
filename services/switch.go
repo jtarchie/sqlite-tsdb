@@ -41,13 +41,15 @@ func NewSwitcher(
 		return nil, fmt.Errorf("could not create initial writer: %w", err)
 	}
 
+	workerQueue := 100
+
 	switcher := &Switcher{
 		buffer:    buffer.New[sdk.Event](bufferSize),
 		count:     0,
 		flushSize: flushSize,
 		path:      path,
 		writer:    writer,
-		worker: worker.New(1, 1, func(i int, writer *Writer) {
+		worker: worker.New(workerQueue, 1, func(i int, writer *Writer) {
 			writer.Close()
 			finalizer.Finalize(writer.Filename())
 		}),
