@@ -8,24 +8,25 @@ import (
 
 	"github.com/jtarchie/sqlite-tsdb/buffer"
 	"github.com/jtarchie/sqlite-tsdb/sdk"
+	"github.com/jtarchie/sqlite-tsdb/worker"
 )
 
 type Switcher struct {
-	buffer       *buffer.Buffer[sdk.Event]
-	closedWriter ClosedWriter
-	count        uint64
-	flushSize    int
-	path         string
-	writer       *Writer
+	buffer    *buffer.Buffer[sdk.Event]
+	count     uint64
+	flushSize int
+	path      string
+	writer    *Writer
+	worker    *worker.Worker[*Writer]
 }
 
-type ClosedWriter interface {
+type Finalizer interface {
 	Finalize(string)
 }
 
-type ClosedWriterWrap func(string)
+type FinalizerWrap func(string)
 
-func (c ClosedWriterWrap) Finalize(s string) {
+func (c FinalizerWrap) Finalize(s string) {
 	c(s)
 }
 
@@ -33,7 +34,7 @@ func NewSwitcher(
 	path string,
 	flushSize int,
 	bufferSize int,
-	closedWriter ClosedWriter,
+	finalizer Finalizer,
 ) (*Switcher, error) {
 	writer, err := newNamedWriter(path)
 	if err != nil {
@@ -41,12 +42,15 @@ func NewSwitcher(
 	}
 
 	switcher := &Switcher{
-		buffer:       buffer.New[sdk.Event](bufferSize),
-		closedWriter: closedWriter,
-		count:        0,
-		flushSize:    flushSize,
-		path:         path,
-		writer:       writer,
+		buffer:    buffer.New[sdk.Event](bufferSize),
+		count:     0,
+		flushSize: flushSize,
+		path:      path,
+		writer:    writer,
+		worker: worker.New(1, 1, func(i int, writer *Writer) {
+			writer.Close()
+			finalizer.Finalize(writer.Filename())
+		}),
 	}
 	go switcher.process()
 
@@ -70,13 +74,9 @@ func (s *Switcher) process() {
 		current := atomic.AddUint64(&s.count, 1)
 		if current%uint64(s.flushSize) == 0 {
 			previousWriter := s.writer
-
 			s.writer, _ = newNamedWriter(s.path)
 
-			go func() {
-				previousWriter.Close()
-				s.closedWriter.Finalize(previousWriter.Filename())
-			}()
+			s.worker.Enqueue(previousWriter)
 		}
 	}
 }
