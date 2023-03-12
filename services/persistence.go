@@ -30,13 +30,13 @@ func (p *Persistence) Finalize(filename string) {
 	s3Location := fmt.Sprintf("%s/%s", p.remoteLocationPrefix, filepath.Base(filename))
 
 	logger = logger.With(
-		zap.String("s3", s3Location),
+		zap.String("remote", s3Location),
 		zap.String("local", localLocation),
 	)
 
 	s3File, err := vfssimple.NewFile(s3Location)
 	if err != nil {
-		logger.Error("could not reference s3", zap.Error(err))
+		logger.Error("could not reference remote", zap.Error(err))
 
 		return
 	}
