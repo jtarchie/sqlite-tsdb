@@ -26,10 +26,13 @@ jobs:
       uses: jaxxstorm/action-install-gh-release@v1.9.0
       with: # Grab the latest version
         repo: golangci/golangci-lint
+        cache: true
 
     - name: Install Task
       uses: arduino/setup-task@v1
 
     - name: Task
       run: |
+        export PATH="/opt/hostedtoolcache/golangci/golangci-lint/latest/linux-x64;$PATH"
+        chmod +x /opt/hostedtoolcache/golangci/golangci-lint/latest/linux-x64/golang-ci
         task
