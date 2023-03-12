@@ -22,7 +22,7 @@ func NewWriter(filename string) (*Writer, error) {
 
 	_, err = db.Exec(`
 		PRAGMA busy_timeout = 5000;
-		PRAGMA journal_mode=WAL;
+		PRAGMA journal_mode = WAL;
 		PRAGMA synchronous = NORMAL;
 		PRAGMA wal_autocheckpoint = 0;
 		CREATE TABLE IF NOT EXISTS payloads (
@@ -72,6 +72,15 @@ func (s *Writer) Close() error {
 	err := s.insert.Close()
 	if err != nil {
 		return fmt.Errorf("cannot close insert prepared statement: %w", err)
+	}
+
+	_, err = s.db.Exec(`
+		PRAGMA JOURNAL_MODE = DELETE; -- to be able to actually set page size
+		PRAGMA PAGE_SIZE = 1024;      -- trade off of number of requests that need to be made vs overhead.
+		VACUUM;
+	`)
+	if err != nil {
+		return fmt.Errorf("cannot optimize the database: %w", err)
 	}
 
 	err = s.db.Close()
