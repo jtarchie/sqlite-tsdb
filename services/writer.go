@@ -77,6 +77,7 @@ func (s *Writer) Close() error {
 	_, err = s.db.Exec(`
 		PRAGMA JOURNAL_MODE = DELETE; -- to be able to actually set page size
 		PRAGMA PAGE_SIZE = 1024;      -- trade off of number of requests that need to be made vs overhead.
+		INSERT INTO events(events) values ('optimize');
 		VACUUM;
 	`)
 	if err != nil {

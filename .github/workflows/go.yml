@@ -27,13 +27,9 @@ jobs:
         version: latest
         args: --timeout=10m
 
-    - name: Build and Test with CGO
-      run:  |
-        export CGO_ENABLED=0
-        go build --tags "fts5 json1" -v ./...
-        go test --tags "fts5 json1" -v ./...
+    - name: Install Task
+      uses: arduino/setup-task@v1
 
-    - name: Build and Test
+    - name: Task
       run: |
-        go build --tags "fts5 json1" -v ./...
-        go test --tags "fts5 json1" -v -race ./...
+        task
