@@ -2,3 +2,5 @@
 
 brew 'deno'
 brew 'go-task'
+brew 'golangci-lint'
+brew 'go'

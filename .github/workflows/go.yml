@@ -22,17 +22,14 @@ jobs:
         check-latest: true
         cache: true
     
-    - name: Install deps
-      uses: jaxxstorm/action-install-gh-release@v1.9.0
-      with: # Grab the latest version
-        repo: golangci/golangci-lint
-        cache: true
+    - uses: golangci/golangci-lint-action@v3
+      with:
+        version: latest
+        args: --timeout=10m
 
     - name: Install Task
       uses: arduino/setup-task@v1
 
     - name: Task
       run: |
-        export PATH="/opt/hostedtoolcache/golangci/golangci-lint/latest/linux-x64;$PATH"
-        chmod +x /opt/hostedtoolcache/golangci/golangci-lint/latest/linux-x64/golangci-lint
-        task
+        task ci

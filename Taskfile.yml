@@ -16,4 +16,9 @@ tasks:
     - task: build
     - task: test-race
     - task: test
-  
+  ci:
+    cmds:
+    - task: format
+    - task: build
+    - task: test-race
+    - task: test
