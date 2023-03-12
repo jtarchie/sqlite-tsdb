@@ -34,5 +34,5 @@ jobs:
     - name: Task
       run: |
         export PATH="/opt/hostedtoolcache/golangci/golangci-lint/latest/linux-x64;$PATH"
-        chmod +x /opt/hostedtoolcache/golangci/golangci-lint/latest/linux-x64/golang-ci
+        chmod +x /opt/hostedtoolcache/golangci/golangci-lint/latest/linux-x64/golangci-lint
         task
