@@ -9,15 +9,17 @@ import (
 	"github.com/jtarchie/sqlite-tsdb/buffer"
 	"github.com/jtarchie/sqlite-tsdb/sdk"
 	"github.com/jtarchie/sqlite-tsdb/worker"
+	"go.uber.org/zap"
 )
 
 type Switcher struct {
 	buffer    *buffer.Buffer[sdk.Event]
 	count     uint64
 	flushSize int
+	logger    *zap.Logger
 	path      string
-	writer    *Writer
 	worker    *worker.Worker[*Writer]
+	writer    *Writer
 }
 
 type Finalizer interface {
@@ -35,8 +37,9 @@ func NewSwitcher(
 	flushSize int,
 	bufferSize int,
 	finalizer Finalizer,
+	logger *zap.Logger,
 ) (*Switcher, error) {
-	writer, err := newNamedWriter(path)
+	writer, err := newNamedWriter(path, logger)
 	if err != nil {
 		return nil, fmt.Errorf("could not create initial writer: %w", err)
 	}
@@ -47,9 +50,14 @@ func NewSwitcher(
 		buffer:    buffer.New[sdk.Event](bufferSize),
 		count:     0,
 		flushSize: flushSize,
+		logger:    logger,
 		path:      path,
 		writer:    writer,
 		worker: worker.New(workerQueue, 1, func(i int, writer *Writer) {
+			logger.Info("worker start",
+				zap.Int("worker", i),
+				zap.String("filename", writer.Filename()),
+			)
 			writer.Close()
 			finalizer.Finalize(writer.Filename())
 		}),
@@ -59,13 +67,15 @@ func NewSwitcher(
 	return switcher, nil
 }
 
-func newNamedWriter(path string) (*Writer, error) {
+func newNamedWriter(path string, logger *zap.Logger) (*Writer, error) {
 	dbPath := filepath.Join(path, fmt.Sprintf("%d.db", time.Now().UnixNano()))
 
-	return NewWriter(dbPath)
+	return NewWriter(dbPath, logger)
 }
 
 func (s *Switcher) process() {
+	var err error
+
 	defer s.buffer.Close()
 
 	for {
@@ -76,7 +86,11 @@ func (s *Switcher) process() {
 		current := atomic.AddUint64(&s.count, 1)
 		if current%uint64(s.flushSize) == 0 {
 			previousWriter := s.writer
-			s.writer, _ = newNamedWriter(s.path)
+
+			s.writer, err = newNamedWriter(s.path, s.logger)
+			if err != nil {
+				s.logger.Error("could not init new writer", zap.Error(err))
+			}
 
 			s.worker.Enqueue(previousWriter)
 		}

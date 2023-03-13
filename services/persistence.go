@@ -34,6 +34,8 @@ func (p *Persistence) Finalize(filename string) {
 		zap.String("local", localLocation),
 	)
 
+	logger.Info("starting transfer")
+
 	s3File, err := vfssimple.NewFile(s3Location)
 	if err != nil {
 		logger.Error("could not reference remote", zap.Error(err))

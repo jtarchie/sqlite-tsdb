@@ -6,15 +6,26 @@ import (
 	"fmt"
 
 	"github.com/jtarchie/sqlite-tsdb/sdk"
+	"go.uber.org/zap"
 )
 
 type Writer struct {
 	db       *sql.DB
-	insert   *sql.Stmt
 	filename string
+	insert   *sql.Stmt
+	logger   *zap.Logger
 }
 
-func NewWriter(filename string) (*Writer, error) {
+func NewWriter(
+	filename string,
+	logger *zap.Logger,
+) (*Writer, error) {
+	logger = logger.With(
+		zap.String("filename", filename),
+	)
+
+	logger.Info("creating new writer")
+
 	db, err := sql.Open(dbDriverName, fmt.Sprintf("%s?_busy_timeout=5000&_journal_mode=WAL&_synchronous=NORMAL", filename))
 	if err != nil {
 		return nil, fmt.Errorf("could not open sqlite db %q: %w", filename, err)
@@ -51,6 +62,7 @@ func NewWriter(filename string) (*Writer, error) {
 		db:       db,
 		filename: filename,
 		insert:   insert,
+		logger:   logger,
 	}, nil
 }
 
@@ -69,6 +81,8 @@ func (s *Writer) Insert(event *sdk.Event) error {
 }
 
 func (s *Writer) Close() error {
+	s.logger.Info("closing writer")
+
 	err := s.insert.Close()
 	if err != nil {
 		return fmt.Errorf("cannot close insert prepared statement: %w", err)

@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/http/httptest"
+	"os"
+	"os/exec"
 	"regexp"
 	"time"
 
@@ -15,25 +16,56 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	fakes3 "github.com/johannesboyne/gofakes3"
-	"github.com/johannesboyne/gofakes3/backend/s3mem"
+	"github.com/onsi/ginkgo/v2"
+	"github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
+	"github.com/onsi/gomega/gexec"
+	"github.com/phayes/freeport"
 )
 
 type S3Server struct {
-	*httptest.Server
 	*s3.Client
 
 	bucketName string
+	session    *gexec.Session
+	port       int
 }
 
 func NewS3Server(
 	bucketName string,
 ) (*S3Server, error) {
-	backend := s3mem.New()
-	faker := fakes3.New(backend)
-	server := httptest.NewServer(faker.Server())
+	tmpDir, err := os.MkdirTemp("", "")
+	if err != nil {
+		return nil, fmt.Errorf("could not create tmp dir: %w", err)
+	}
 
-	client, err := news3Client(server.URL)
+	port, err := freeport.GetFreePort()
+	if err != nil {
+		return nil, fmt.Errorf("could not find port: %w", err)
+	}
+
+	//nolint: gosec
+	command := exec.Command("minio", "server",
+		"--address", fmt.Sprintf(":%d", port),
+		"--config-dir", tmpDir,
+		tmpDir,
+	)
+	command.Env = []string{
+		fmt.Sprintf("HOME=%s", os.Getenv("HOME")),
+		"MINIO_ROOT_USER=minio",
+		"MINIO_ROOT_PASSWORD=password",
+		"MINIO_BROWSER=off",
+		"TERM=xterm-256color",
+	}
+
+	session, err := gexec.Start(command, ginkgo.GinkgoWriter, ginkgo.GinkgoWriter)
+	if err != nil {
+		return nil, fmt.Errorf("could not start minio: %w", err)
+	}
+
+	gomega.Eventually(session.Out, "10s").Should(gbytes.Say("API:"))
+
+	client, err := news3Client(fmt.Sprintf("http://0.0.0.0:%d", port))
 	if err != nil {
 		return nil, fmt.Errorf("client error: %w", err)
 	}
@@ -44,9 +76,10 @@ func NewS3Server(
 	}
 
 	return &S3Server{
-		Server:     server,
+		session:    session,
 		Client:     client,
 		bucketName: bucketName,
+		port:       port,
 	}, nil
 }
 
@@ -72,9 +105,9 @@ func news3Client(url string) (*s3.Client, error) {
 		context.TODO(),
 		config.WithCredentialsProvider(
 			credentials.NewStaticCredentialsProvider(
-				"KEY",
-				"SECRET",
-				"SESSION",
+				"minio",
+				"password",
+				"",
 			),
 		),
 		config.WithHTTPClient(&http.Client{
@@ -156,5 +189,9 @@ func (s *S3Server) PutObject(
 }
 
 func (s *S3Server) Close() {
-	s.Server.Close()
+	s.session.Kill()
+}
+
+func (s *S3Server) URL() string {
+	return fmt.Sprintf("http://0.0.0.0:%d", s.port)
 }

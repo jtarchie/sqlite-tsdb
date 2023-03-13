@@ -7,6 +7,7 @@ import (
 	"github.com/jtarchie/sqlite-tsdb/services"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"go.uber.org/zap"
 )
 
 var _ = Describe("Writer", func() {
@@ -17,7 +18,10 @@ var _ = Describe("Writer", func() {
 		err = dbFile.Close()
 		Expect(err).NotTo(HaveOccurred())
 
-		writer, err := services.NewWriter(dbFile.Name())
+		logger, err := zap.NewDevelopment()
+		Expect(err).NotTo(HaveOccurred())
+
+		writer, err := services.NewWriter(dbFile.Name(), logger)
 		Expect(err).NotTo(HaveOccurred())
 
 		By("writing a payload", func() {

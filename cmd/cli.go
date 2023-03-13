@@ -46,6 +46,7 @@ func (cli *CLI) Run(logger *zap.Logger) error {
 			fmt.Sprintf("s3://%s", cli.S3.Bucket),
 			logger,
 		),
+		logger,
 	)
 	if err != nil {
 		return fmt.Errorf("could not create switcher: %w", err)
@@ -92,11 +93,12 @@ func (cli *CLI) registerBucketAuth() {
 		fmt.Sprintf("s3://%s", cli.S3.Bucket),
 		s3.NewFileSystem().WithOptions(
 			s3.Options{
-				AccessKeyID:     cli.S3.AccessKeyID,
-				SecretAccessKey: cli.S3.SecretAccessKey,
-				Region:          cli.S3.Region,
-				Endpoint:        cli.S3.Endpoint.String(),
-				ForcePathStyle:  cli.S3.ForcePathStyle,
+				AccessKeyID:                 cli.S3.AccessKeyID,
+				SecretAccessKey:             cli.S3.SecretAccessKey,
+				Region:                      cli.S3.Region,
+				Endpoint:                    cli.S3.Endpoint.String(),
+				ForcePathStyle:              cli.S3.ForcePathStyle,
+				DisableServerSideEncryption: true,
 			},
 		),
 	)
