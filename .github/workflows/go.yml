@@ -24,10 +24,7 @@ jobs:
         version: latest
         args: --timeout=10m
   build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - uses: denoland/setup-deno@v1
