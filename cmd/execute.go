@@ -13,7 +13,10 @@ func Execute(
 ) error {
 	cli := CLI{}
 
-	parser, err := kong.New(&cli)
+	parser, err := kong.New(
+		&cli,
+		kong.UsageOnError(),
+	)
 	if err != nil {
 		return fmt.Errorf("could not create cli: %w", err)
 	}

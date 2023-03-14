@@ -21,16 +21,16 @@ type CLI struct {
 	BufferSize int    `help:"size of in-memory buffer" default:"100"`
 	WorkPath   string `type:"existingdir" help:"store database in directory" required:""`
 	S3         struct {
-		AccessKeyID     string
-		SecretAccessKey string
+		AccessKeyID     string `help:"access key to the s3 bucket"`
+		SecretAccessKey string `help:"secret access key to the s3 bucket"`
 
-		Bucket         string
-		Endpoint       *url.URL
-		ForcePathStyle bool
-		Path           string
-		Region         string
-		SkipVerify     bool
-	} `embed:"" prefix:"s3-" group:"s3"`
+		Bucket         string   `help:"name of the s3 bucket"`
+		Endpoint       *url.URL `help:"full URL to s3 endpoint, not including bucket"`
+		ForcePathStyle bool     `help:"force the path style of URLs, rather than sub-domains"`
+		Path           string   `help:"path to store files on bucket"`
+		Region         string   `help:"region for the s3 bucket (usually only for AWS)"`
+		SkipVerify     bool     `help:"do not verify the SSL certs"`
+	} `embed:"" prefix:"s3-" group:"s3" help:"where to store the sqlite databases"`
 }
 
 func (cli *CLI) Run(logger *zap.Logger) error {
