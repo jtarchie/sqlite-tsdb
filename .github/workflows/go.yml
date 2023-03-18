@@ -46,5 +46,4 @@ jobs:
         name: minio
         url: https://dl.min.io/server/minio/release/linux-amd64/minio
     - name: Task
-      run: |
-        task ci
+      run: task
