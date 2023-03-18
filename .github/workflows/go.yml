@@ -25,16 +25,19 @@ jobs:
       with: # Grab the latest version
         repo: tdewolff/minify
         token: ${{ secrets.GITHUB_TOKEN }}
+        cache: enable
     - name: Install golangci-lint
       uses: jaxxstorm/action-install-gh-release@v1.10.0
       with: # Grab the latest version
         repo: golangci/golangci-lint
         token: ${{ secrets.GITHUB_TOKEN }}
+        cache: enable
     - name: Install task
       uses: jaxxstorm/action-install-gh-release@v1.10.0
       with: # Grab the latest version
         repo: go-task/task
         token: ${{ secrets.GITHUB_TOKEN }}
+        cache: enable
     - uses: engineerd/configurator@v0.0.10
       with:
         name: minio
