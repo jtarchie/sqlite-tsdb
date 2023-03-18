@@ -21,17 +21,17 @@ jobs:
         check-latest: true
         cache: true
     - name: Install minify
-      uses: jaxxstorm/action-install-gh-release@v1.9.0
+      uses: jaxxstorm/action-install-gh-release@v1.10.0
       with: # Grab the latest version
         repo: tdewolff/minify
         token: ${{ secrets.GITHUB_TOKEN }}
     - name: Install golangci-lint
-      uses: jaxxstorm/action-install-gh-release@v1.9.0
+      uses: jaxxstorm/action-install-gh-release@v1.10.0
       with: # Grab the latest version
         repo: golangci/golangci-lint
         token: ${{ secrets.GITHUB_TOKEN }}
     - name: Install task
-      uses: jaxxstorm/action-install-gh-release@v1.9.0
+      uses: jaxxstorm/action-install-gh-release@v1.10.0
       with: # Grab the latest version
         repo: go-task/task
         token: ${{ secrets.GITHUB_TOKEN }}
