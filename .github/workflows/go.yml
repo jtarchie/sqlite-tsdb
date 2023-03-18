@@ -33,7 +33,6 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         binaries-location: golangci-lint-1.52.0-linux-amd64
         tag: v1.52.0
-        cache: enable
     - name: Install task
       uses: jaxxstorm/action-install-gh-release@v1.10.0
       with: # Grab the latest version
