@@ -21,17 +21,26 @@ jobs:
         check-latest: true
         cache: true
     - name: Install minify
-      uses: jaxxstorm/action-install-gh-release@v1.9.0
+      uses: engineerd/configurator@v0.0.10
       with: # Grab the latest version
+        name: minify
         repo: tdewolff/minify
-    - name: Install golangci-ling
-      uses: jaxxstorm/action-install-gh-release@v1.9.0
+        fromGitHubReleases: true
+        token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Install golangci-lint
+      uses: engineerd/configurator@v0.0.10
       with: # Grab the latest version
+        name: golangci-lint
+        fromGitHubReleases: true
         repo: golangci/golangci-lint
-    - name: Install tasl
-      uses: jaxxstorm/action-install-gh-release@v1.9.0
+        token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Install task
+      uses: engineerd/configurator@v0.0.10
       with: # Grab the latest version
+        name: task
         repo: go-task/task
+        fromGitHubReleases: true
+        token: ${{ secrets.GITHUB_TOKEN }}
     - uses: engineerd/configurator@v0.0.10
       with:
         name: minio
