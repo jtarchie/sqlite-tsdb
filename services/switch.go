@@ -6,14 +6,14 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/jtarchie/sqlite-tsdb/buffer"
+	"github.com/jtarchie/ringbuffer"
 	"github.com/jtarchie/sqlite-tsdb/sdk"
 	"github.com/jtarchie/worker"
 	"go.uber.org/zap"
 )
 
 type Switcher struct {
-	buffer    *buffer.Buffer[sdk.Event]
+	buffer    *ringbuffer.Channel[sdk.Event]
 	count     uint64
 	flushSize int
 	logger    *zap.Logger
@@ -47,7 +47,7 @@ func NewSwitcher(
 	workerQueue := 100
 
 	switcher := &Switcher{
-		buffer:    buffer.New[sdk.Event](bufferSize),
+		buffer:    ringbuffer.NewChannel[sdk.Event](bufferSize),
 		count:     0,
 		flushSize: flushSize,
 		logger:    logger,
