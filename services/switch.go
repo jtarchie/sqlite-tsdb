@@ -8,7 +8,7 @@ import (
 
 	"github.com/jtarchie/sqlite-tsdb/buffer"
 	"github.com/jtarchie/sqlite-tsdb/sdk"
-	"github.com/jtarchie/sqlite-tsdb/worker"
+	"github.com/jtarchie/worker"
 	"go.uber.org/zap"
 )
 
