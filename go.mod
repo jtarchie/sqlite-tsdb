@@ -11,7 +11,7 @@ require (
 	github.com/bxcodec/faker/v3 v3.8.1
 	github.com/c2fo/vfs/v6 v6.6.0
 	github.com/gofrs/uuid v4.4.0+incompatible
-	github.com/imroc/req/v3 v3.33.1
+	github.com/imroc/req/v3 v3.33.2
 	github.com/jtarchie/ringbuffer v0.0.0-20230412183401-e1594e897dfe
 	github.com/jtarchie/worker v0.0.0-20230412180846-02b48171c237
 	github.com/labstack/echo/v4 v4.10.2
