@@ -24,6 +24,6 @@ jobs:
       with:
         name: minio
         url: https://dl.min.io/server/minio/release/linux-amd64/minio
-    - uses: ./.github/actions/go-task
+    - uses: jtarchie/shared/actions/go-task@main
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
