@@ -20,7 +20,7 @@ require (
 	github.com/onsi/gomega v1.27.6
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	go.uber.org/zap v1.24.0
-	modernc.org/sqlite v1.21.1
+	modernc.org/sqlite v1.22.0
 )
 
 require (
@@ -112,7 +112,7 @@ require (
 	lukechampine.com/uint128 v1.3.0 // indirect
 	modernc.org/cc/v3 v3.40.0 // indirect
 	modernc.org/ccgo/v3 v3.16.13 // indirect
-	modernc.org/libc v1.22.3 // indirect
+	modernc.org/libc v1.22.4 // indirect
 	modernc.org/mathutil v1.5.0 // indirect
 	modernc.org/memory v1.5.0 // indirect
 	modernc.org/opt v0.1.3 // indirect
