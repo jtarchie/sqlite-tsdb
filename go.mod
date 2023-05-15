@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.24
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.33.1
 	github.com/bxcodec/faker/v3 v3.8.1
-	github.com/c2fo/vfs/v6 v6.6.0
+	github.com/c2fo/vfs/v6 v6.7.0
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/imroc/req/v3 v3.34.0
 	github.com/jtarchie/ringbuffer v0.0.0-20230413212828-dd47e33f985b
@@ -37,7 +37,7 @@ require (
 	github.com/Azure/go-autorest/autorest/date v0.3.0 // indirect
 	github.com/Azure/go-autorest/logger v0.2.1 // indirect
 	github.com/Azure/go-autorest/tracing v0.6.0 // indirect
-	github.com/aws/aws-sdk-go v1.44.261 // indirect
+	github.com/aws/aws-sdk-go v1.44.262 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.10 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.3 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.33 // indirect
