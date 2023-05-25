@@ -42,6 +42,12 @@ func NewWriter(
 			timestamp  INT GENERATED ALWAYS AS (payload->'$.timestamp') VIRTUAL,
 			value      TEXT GENERATED ALWAYS AS (payload->'$.value') VIRTUAL
 		);
+		CREATE TABLE IF NOT EXISTS metadata (
+			id    INTEGER PRIMARY KEY,
+			key   TEXT NOT NULL,
+			value TEXT NOT NULL
+		);
+		INSERT INTO metadata(key, value) VALUES ('version', '1');
 		CREATE INDEX IF NOT EXISTS payloads_timestamp ON payloads(timestamp);
 		CREATE VIRTUAL TABLE events USING fts5(value, content=payloads, content_rowid=id);
 		CREATE TRIGGER payload_insert AFTER INSERT ON payloads BEGIN
