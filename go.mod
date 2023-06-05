@@ -11,7 +11,7 @@ require (
 	github.com/bxcodec/faker/v3 v3.8.1
 	github.com/c2fo/vfs/v6 v6.7.0
 	github.com/gofrs/uuid v4.4.0+incompatible
-	github.com/imroc/req/v3 v3.35.0
+	github.com/imroc/req/v3 v3.35.1
 	github.com/jtarchie/ringbuffer v0.0.0-20230413212828-dd47e33f985b
 	github.com/jtarchie/worker v0.0.0-20230413212901-08da1e5cf675
 	github.com/labstack/echo/v4 v4.10.2
@@ -83,7 +83,7 @@ require (
 	github.com/quic-go/qpack v0.4.0 // indirect
 	github.com/quic-go/qtls-go1-19 v0.3.2 // indirect
 	github.com/quic-go/qtls-go1-20 v0.2.2 // indirect
-	github.com/quic-go/quic-go v0.34.0 // indirect
+	github.com/quic-go/quic-go v0.35.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
