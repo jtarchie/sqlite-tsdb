@@ -20,7 +20,7 @@ require (
 	github.com/onsi/gomega v1.27.7
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	go.uber.org/zap v1.24.0
-	modernc.org/sqlite v1.22.1
+	modernc.org/sqlite v1.23.0
 )
 
 require (
