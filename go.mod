@@ -15,7 +15,7 @@ require (
 	github.com/jtarchie/ringbuffer v0.0.0-20230413212828-dd47e33f985b
 	github.com/jtarchie/worker v0.0.0-20230413212901-08da1e5cf675
 	github.com/labstack/echo/v4 v4.10.2
-	github.com/mattn/go-sqlite3 v1.14.16
+	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/onsi/ginkgo/v2 v2.9.5
 	github.com/onsi/gomega v1.27.7
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
