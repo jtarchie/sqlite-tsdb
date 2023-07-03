@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.26
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.35.0
 	github.com/bxcodec/faker/v3 v3.8.1
-	github.com/c2fo/vfs/v6 v6.7.0
+	github.com/c2fo/vfs/v6 v6.8.0
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/imroc/req/v3 v3.37.0
 	github.com/jtarchie/ringbuffer v0.0.0-20230413212828-dd47e33f985b
@@ -70,6 +70,7 @@ require (
 	github.com/googleapis/gax-go/v2 v2.11.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
+	github.com/jlaffaye/ftp v0.2.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/klauspost/compress v1.16.6 // indirect
